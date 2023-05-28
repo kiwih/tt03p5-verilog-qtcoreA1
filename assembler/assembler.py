@@ -1,4 +1,4 @@
-MEM_SIZE = 19
+MEM_SIZE = 22
 
 def assemble(asm_lines):
     opcode_dict = {

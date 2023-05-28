@@ -123,6 +123,10 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[55 -: 8] = 8'he3; //MEM[3] = 0xE3 (ADDI 3)
         scan_chain[63 -: 8] = 8'he4; //MEM[4] = 0xE4 (ADDI 4)
 
+        scan_chain[191 -: 8] = 8'b00110011; //lock
+        scan_chain[199 -: 8] = 8'b00010000; //lock
+
+
         scan_chain[SCAN_CHAIN_SIZE-17 -: 8] = 8'hF0; //write to the IO register
         
         scan_enable_in = 0;
@@ -169,6 +173,10 @@ module qtcore_a1_4baddr_scan_test (
             end
             if(dut.qtcore.memory_inst.memory[3].mem_cell.internal_data !== 8'he3) begin
                 $display("Wrong mem[3] reg value");
+                $finish;
+            end
+            if(dut.qtcore.memory_inst.lock_out[15:0] !== 16'b0001000000110011) begin
+                $display("Wrong lock reg value, got %b", dut.qtcore.memory_inst.lock_out);
                 $finish;
             end
         `endif
