@@ -45,7 +45,7 @@ assign uio_oe[6] = proc_enable_in;
 assign uio_oe[5:0] = 6'b111111; //set rest to high impedance input (unused)
 
 accumulator_microcontroller #(
-    .MEM_SIZE(15)
+    .MEM_SIZE(17)
 ) 
 qtcore
 (
