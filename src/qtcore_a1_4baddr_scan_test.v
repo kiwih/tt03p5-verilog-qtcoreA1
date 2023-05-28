@@ -15,7 +15,7 @@ module qtcore_a1_4baddr_scan_test (
  localparam CLK_PERIOD = 50;
     localparam CLK_HPERIOD = CLK_PERIOD/2;
 
-    localparam FULL_MEM_SIZE = 18; //includes the IO register
+    localparam FULL_MEM_SIZE = 20; //includes the IO register
     localparam SCAN_CHAIN_SIZE = 24 + (FULL_MEM_SIZE * 8);
     wire [7:0] io_in;
     wire [7:0] io_out;
@@ -437,10 +437,10 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[7:3] = 5'h0;    //PC = 0
         scan_chain[15:8] = 8'h00; //IR = 0
         scan_chain[23:16] = 8'h00; //ACC = 0x00
-        scan_chain[31 -: 8] = 8'b00010001;
+        scan_chain[31 -: 8] = 8'b00010011;
         scan_chain[39 -: 8] = 8'b10010000;
         scan_chain[47 -: 8] = 8'b11110101;
-        scan_chain[55 -: 8] = 8'b00010001;
+        scan_chain[55 -: 8] = 8'b00010011;
         scan_chain[63 -: 8] = 8'b10010000;
         scan_chain[71 -: 8] = 8'b11110011;
         scan_chain[79 -: 8] = 8'b00001110;
@@ -448,12 +448,15 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[95 -: 8] = 8'b00101110;
         scan_chain[103 -: 8] = 8'b11101110;
         scan_chain[111 -: 8] = 8'b11111011;
-        scan_chain[119 -: 8] = 8'b00110001;
+        scan_chain[119 -: 8] = 8'b00110011;
         scan_chain[127 -: 8] = 8'b11111101;
         scan_chain[135 -: 8] = 8'b11110000;
         scan_chain[143 -: 8] = 8'b00000000;
         scan_chain[151 -: 8] = 8'b00011000;
         scan_chain[159 -: 8] = 8'b00000001;
+        scan_chain[167 -: 8] = 8'b00000000;
+        scan_chain[175 -: 8] = 8'b00000000;
+
 
 
         //RESET PROCESSOR
@@ -512,9 +515,9 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[15:8] = 8'h00; //IR = 0
         scan_chain[23:16] = 8'h00; //ACC = 0x00
         scan_chain[31 -: 8] = 8'b00010000;
-        scan_chain[39 -: 8] = 8'b01010010;
+        scan_chain[39 -: 8] = 8'b01010100;
         scan_chain[47 -: 8] = 8'b11111011;
-        scan_chain[55 -: 8] = 8'b00110001;
+        scan_chain[55 -: 8] = 8'b00110011;
         scan_chain[63 -: 8] = 8'b00010000;
         scan_chain[71 -: 8] = 8'b11100001;
         scan_chain[79 -: 8] = 8'b00110000;
@@ -528,6 +531,9 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[143 -: 8] = 8'b00000000;
         scan_chain[151 -: 8] = 8'b00000000;
         scan_chain[159 -: 8] = 8'b00000000;
+        scan_chain[167 -: 8] = 8'b00000000;
+        scan_chain[175 -: 8] = 8'b00000000;
+
 
 
         //RESET PROCESSOR
