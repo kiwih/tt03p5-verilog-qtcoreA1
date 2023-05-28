@@ -9,7 +9,7 @@
 ## How it works
 The QTCore-A1 is a basic accumulator-based 8-bit microarchitecture (with an emphasis on the micro). It is a Von Neumann design (shared data and instruction memory).
 
-Although primarily designed for Tiny Tapeout 3, it is parameterized and may be synthesized to FPGAs (and a project file for CMOD A7 is provided on the project GitHub).
+Although primarily designed for Tiny Tapeout 3 (and **this version is updated for Tiny Tapeout 3.5**), it is parameterized and may be synthesized to FPGAs (and a project file for CMOD A7 is provided on the project GitHub).
 
 Probably the most interesting thing about this design is that all functional Verilog beyond the Tiny Tapeout wrapper was written by GPT-4, i.e. not a human! 
 The author (Hammond Pearce) developed with GPT-4 first the ISA, then the processor, fully conversationally. Hammond wrote the test-benches to validate the design, and then had the
