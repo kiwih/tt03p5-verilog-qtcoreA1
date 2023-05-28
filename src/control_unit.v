@@ -8,7 +8,8 @@
 
 module isa_to_alu_opcode (
     input [7:0] isa_instr,
-    output reg [3:0] alu_opcode
+    output reg [3:0] alu_opcode,
+    input wire [3:0] locking_key // 1100
 );
 
     // Extract the opcode from the ISA instruction
@@ -17,15 +18,16 @@ module isa_to_alu_opcode (
     wire [2:0] opcode_3bit = isa_instr[7:5];
 
     always @* begin
+        case_var = {alu_opcode[7:4], alu_opcode[3:0] ^ locking_key};
         case (opcode_8bit)
-            8'b11110110: alu_opcode = 4'b0101; // SHL
-            8'b11110111: alu_opcode = 4'b0110; // SHR
-            8'b11111000: alu_opcode = 4'b0111; // SHL4
-            8'b11111001: alu_opcode = 4'b1000; // ROL
-            8'b11111010: alu_opcode = 4'b1001; // ROR
-            8'b11111100: alu_opcode = 4'b1010; // DEC
-            8'b11111110: alu_opcode = 4'b1011; // INV
-            8'b11111101: alu_opcode = 4'b1100; // CLR
+            8'b11111010: alu_opcode = 4'b0101; // SHL
+            8'b11111011: alu_opcode = 4'b0110; // SHR
+            8'b11110100: alu_opcode = 4'b0111; // SHL4
+            8'b11110101: alu_opcode = 4'b1000; // ROL
+            8'b11110110: alu_opcode = 4'b1001; // ROR
+            8'b11110000: alu_opcode = 4'b1010; // DEC
+            8'b11110010: alu_opcode = 4'b1011; // INV
+            8'b11110001: alu_opcode = 4'b1100; // CLR
 
             default: begin
                 case (opcode_4bit)
@@ -86,7 +88,9 @@ module control_unit (
     // Scan chain signals
     input wire scan_enable, // Scan chain enable signal
     input wire scan_in, // Scan chain input
-    output wire scan_out // Scan chain output
+    output wire scan_out, // Scan chain output
+
+    input wire [7:0] locking_key // 8'bxxxx1110
 );
 
 
@@ -180,7 +184,8 @@ end
   // Instantiate ALU ISA decoder
     isa_to_alu_opcode isa_decoder (
         .isa_instr(instruction),
-        .alu_opcode(ALU_opcode)
+        .alu_opcode(ALU_opcode),
+        .locking_key(locking_key[7:4])
     );
   
   always @(*) begin
@@ -195,34 +200,35 @@ end
                 PC_mux_select = 2'b00;
             end
             STATE_EXECUTE: begin
+                case_var = {instructuion[7:4],instruction[3:0] ^ locking_key[3:0]}; // 1110
                 case (instruction[7:0])
-                    8'b11110000: begin // JMP
+                    8'b11111110: begin // JMP
                         PC_write_enable = 1'b1;
                         PC_mux_select = 2'b01;
                     end
-                    8'b11110001: begin // JSR
+                    8'b11111111: begin // JSR
                         PC_write_enable = 1'b1;
                         PC_mux_select = 2'b01;
                     end
-                    8'b11110010: begin // BEQ_FWD
+                    8'b11110011: begin // BEQ_FWD
                         if (ZF) begin
                             PC_write_enable = 1'b1;
                             PC_mux_select = 2'b11;
                         end
                     end
-                    8'b11110011: begin // BEQ_BWD
+                    8'b11111101: begin // BEQ_BWD
                         if (ZF) begin
                             PC_write_enable = 1'b1;
                             PC_mux_select = 2'b10;
                         end
                     end
-                    8'b11110100: begin // BNE_FWD
+                    8'b11111010: begin // BNE_FWD
                         if (!ZF) begin
                             PC_write_enable = 1'b1;
                             PC_mux_select = 2'b11;
                         end
                     end
-                    8'b11110101: begin // BNE_BWD
+                    8'b11111011: begin // BNE_BWD
                         if (!ZF) begin
                             PC_write_enable = 1'b1;
                             PC_mux_select = 2'b10;
@@ -280,10 +286,10 @@ always @(*) begin
         8'b11111010,
         8'b11111100,
         8'b11111101,
-        8'b11111110: ACC_write_enable = 1'b1; // SHL, SHR, SHL4, ROL, ROR, DEC, CLR, INV
+        8'b11111110: ACC_write_enable = locking_key[1]; // SHL, SHR, SHL4, ROL, ROR, DEC, CLR, INV
         8'b11111011: begin // LDAR
-          ACC_write_enable = 1'b1;
-          ACC_mux_select = 2'b01; // Memory contents
+          ACC_write_enable = locking_key[2];
+          ACC_mux_select = {locking_key[0], locking_key[3]}; // Memory contents
         end
       endcase
 
@@ -309,7 +315,7 @@ always @(*) begin
     ALU_inputB_mux_select = 1'b0;
 
     // Immediate Data Manipulation Instructions
-    if (instruction[7:4] == 4'b1110) begin // ADDI
+    if (instruction[7:4] == locking_key[3:0]) begin // ADDI 4'b1110
         ALU_inputB_mux_select = 1'b1; // Select immediate value as input B
     end
 end
@@ -327,7 +333,7 @@ always @(*) begin
             // Instructions with Variable-Data Operands
             case (instruction[7:5])
                 3'b001: begin // STA
-                    Memory_write_enable = 1'b1; // Enable writing to memory
+                    Memory_write_enable = locking_key[2]; // Enable writing to memory 1'b1
                 end
             endcase
 
@@ -341,7 +347,7 @@ always @(*) begin
 
         // Instruction fetching
         if (state_out == STATE_FETCH) begin
-            Memory_address_mux_select = 2'b10; // Select PC as memory address
+            Memory_address_mux_select = locking_key[1:0]; // Select PC as memory address
         end
     end
 end
