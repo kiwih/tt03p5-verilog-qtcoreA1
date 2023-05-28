@@ -15,7 +15,7 @@ module qtcore_a1_4baddr_scan_test (
  localparam CLK_PERIOD = 50;
     localparam CLK_HPERIOD = CLK_PERIOD/2;
 
-    localparam FULL_MEM_SIZE = 20; //includes the IO register
+    localparam FULL_MEM_SIZE = 22; //includes the IO register and the scan registers
     localparam SCAN_CHAIN_SIZE = 24 + (FULL_MEM_SIZE * 8);
     wire [7:0] io_in;
     wire [7:0] io_out;
@@ -112,6 +112,7 @@ module qtcore_a1_4baddr_scan_test (
 
         // TEST PART 1: LOAD SCAN CHAIN
 
+        scan_chain = 'b0;
         scan_chain[2:0] = 3'b001;  //state = fetch
         scan_chain[7:3] = 5'h1;    //PC = 1
         scan_chain[15:8] = 8'he0; //IR = ADDI 0 (NOP), should get overrwritten by MEM[2]
@@ -122,7 +123,7 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[55 -: 8] = 8'he3; //MEM[3] = 0xE3 (ADDI 3)
         scan_chain[63 -: 8] = 8'he4; //MEM[4] = 0xE4 (ADDI 4)
 
-        scan_chain[SCAN_CHAIN_SIZE-1 -: 8] = 8'hF0; //write to the IO register
+        scan_chain[SCAN_CHAIN_SIZE-17 -: 8] = 8'hF0; //write to the IO register
         
         scan_enable_in = 0;
         proc_en_in = 0;
