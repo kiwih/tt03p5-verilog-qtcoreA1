@@ -14,7 +14,7 @@ project:
     - tt_um_kiwih_tt_top.v
   
   top_module:  "tt_um_kiwih_tt_top"      # put the name of your top module here, make it unique by prepending your github username
-  tiles: "1x1"
+  tiles: "1x2"
 
 # Keep a track of the submission yaml
 yaml_version: 3.5
