@@ -152,7 +152,7 @@ module qtcore_a1_4baddr_scan_test (
                 $finish;
             end
             if(dut.qtcore.ACC_inst.internal_data !== 8'h01) begin
-                $display("Wrong ACC reg value");
+                $display("Wrong ACC reg value (value is %b)", dut.qtcore.ACC_inst.internal_data);
                 $finish;
             end
             if(dut.qtcore.memory_inst.memory[0].mem_cell.internal_data !== 8'he0) begin
@@ -187,7 +187,7 @@ module qtcore_a1_4baddr_scan_test (
         `ifndef SCAN_ONLY
             $display("ACC is: %b", dut.qtcore.ACC_inst.internal_data);
             if(dut.qtcore.ACC_inst.internal_data !== 8'hb) begin
-                $display("Wrong ACC reg value %d", dut.qtcore.ACC_inst.internal_data);
+                $display("Wrong ACC reg value: %d", dut.qtcore.ACC_inst.internal_data);
                
                 $finish;
             end

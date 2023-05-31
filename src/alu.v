@@ -15,8 +15,10 @@ module alu (
     input wire [7:0] locking_key    //11010010
 );
 
+reg [3:0] case_var;
+
 always @(*) begin
-    case_var = opcode ^ locking_key[7:4] // 1101;
+    case_var = opcode ^ locking_key[7:4]; // 1101;
     case (opcode)
         4'b1101: Y = locking_key[0] ? A + B : A - B;               // ADD
         4'b1100: Y = A - B;               // SUB

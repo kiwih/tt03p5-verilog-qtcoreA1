@@ -16,9 +16,9 @@ module isa_to_alu_opcode (
     wire [7:0] opcode_8bit = isa_instr[7:0];
     wire [3:0] opcode_4bit = isa_instr[7:4];
     wire [2:0] opcode_3bit = isa_instr[7:5];
-
+   
     always @* begin
-        case_var = {alu_opcode[7:4], alu_opcode[3:0] ^ locking_key};
+        //case_var = {alu_opcode[7:4], alu_opcode[3:0] ^ locking_key};
         case (opcode_8bit)
             8'b11111010: alu_opcode = 4'b0101; // SHL
             8'b11111011: alu_opcode = 4'b0110; // SHR
@@ -200,7 +200,7 @@ end
                 PC_mux_select = 2'b00;
             end
             STATE_EXECUTE: begin
-                case_var = {instructuion[7:4],instruction[3:0] ^ locking_key[3:0]}; // 1110
+                //case_var = {instructuion[7:4],instruction[3:0] ^ locking_key[3:0]}; // 1110
                 case (instruction[7:0])
                     8'b11111110: begin // JMP
                         PC_write_enable = 1'b1;
