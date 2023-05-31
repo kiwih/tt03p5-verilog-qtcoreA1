@@ -19,3 +19,6 @@
 12: CLR          ; reset the accumulator
 13: ADDI 5      ; set it to 5
 14: JMP          ; jump to 5
+
+20: DATA 210;
+21: DATA 206;

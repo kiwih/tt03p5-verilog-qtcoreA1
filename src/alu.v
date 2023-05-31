@@ -12,7 +12,7 @@ module alu (
     input wire [7:0] B,
     input wire [3:0] opcode,
     output reg [7:0] Y,
-    input wire [7:0] locking_key    11010010
+    input wire [7:0] locking_key    //11010010
 );
 
 always @(*) begin

@@ -25,3 +25,7 @@
 14: DATA 0; toggle and LED pattern 0
 15: DATA 24; LED pattern of ON (test for led_out=value 12, since 24>>1 == 12)
 16: DATA 1 ; btn and counter mask
+;
+;
+20: DATA 210;
+21: DATA 206;

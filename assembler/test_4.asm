@@ -16,4 +16,7 @@
 13: CLR         
 14: INV
 15: STA 6      ; M[6] becomes 255
-16: DATA 10  
+16: DATA 10  ;
+;
+20: DATA 210;
+21: DATA 206;

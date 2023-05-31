@@ -90,7 +90,7 @@ module control_unit (
     input wire scan_in, // Scan chain input
     output wire scan_out, // Scan chain output
 
-    input wire [7:0] locking_key // 8'bxxxx1110
+    input wire [7:0] locking_key // 8'b11001110
 );
 
 
