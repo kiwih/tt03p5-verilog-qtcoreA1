@@ -55,8 +55,8 @@ qtcore
     .scan_in(scan_in),
     .scan_out(scan_out),
     .proc_en(proc_enable_in),
-    .halt(halt_out),
-    .btn_in(btn_in),
-    .led_out(led_out)
+    .halt(halt_out)//,
+    //.btn_in(btn_in),
+    //.led_out(led_out)
 );
 endmodule

@@ -17,7 +17,12 @@ run_test: test
 ifneq ($(GATES),yes)
 
 # this is the only part you should need to modify:
-VERILOG_SOURCES += $(PWD)/tt_um_kiwih_tt_top.v $(PWD)/accumulator_microcontroller.v $(PWD)/alu.v $(PWD)/shift_register.v $(PWD)/memory_bank.v $(PWD)/control_unit.v
+VERILOG_SOURCES += $(PWD)/tt_um_kiwih_tt_top.v \
+ $(PWD)/accumulator_microcontroller.v \
+ $(PWD)/alu.v $(PWD)/shift_register.v \
+ $(PWD)/memory_bank.v \
+ $(PWD)/control_unit.v \
+ $(PWD)/Control_Status_Registers.v
 
 test:
 	iverilog -s $(TOPLEVEL) $(VERILOG_SOURCES) $(PWD)/qtcore_a1_4baddr_scan_test.v

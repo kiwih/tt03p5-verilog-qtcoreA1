@@ -6,9 +6,9 @@
 // Last Edited Date: 04/19/2023
 //////////////////////////////////////////////////////////////////////////////////
 
-
+`default_nettype none
 module accumulator_microcontroller #(
-    parameter MEM_SIZE = 32
+    parameter MEM_SIZE = 256  // Set MEM_SIZE to 256 by default
 ) 
 (
     input wire clk,
@@ -19,201 +19,238 @@ module accumulator_microcontroller #(
     input wire proc_en,
     output wire halt,
 
-    input wire btn_in,
-    output wire [6:0] led_out
+    input wire [7:0] IO_in,     // Updated to 8-bit IO_in bus
+    output wire [7:0] IO_out,   // Updated to 8-bit IO_out bus
+    output wire INT_out         // New interrupt output
 );
-    // Declare wires for ALU, memory, PC, ACC, and IR connections
-    wire [7:0] alu_A;
-    wire [7:0] alu_B;
-    wire [7:0] alu_Y;
-    reg [4:0] memory_address;
-    wire [7:0] memory_data_in;
-    wire [7:0] memory_data_out;
-    reg [4:0] pc_data_in;
-    wire [4:0] pc_data_out;
-    reg [7:0] acc_data_in;
-    wire [7:0] acc_data_out;
-    wire [7:0] ir_data_in;
-    wire [7:0] ir_data_out;
-    wire cu_PC_write_enable;
-    wire [1:0] cu_PC_mux_select;
-    wire cu_ACC_write_enable;
-    wire [1:0] cu_ACC_mux_select;
-    wire cu_IR_load_enable;
-    wire [3:0] cu_ALU_opcode;
-    wire cu_ALU_inputB_mux_select;
-    wire cu_Memory_write_enable;
-    wire [1:0] cu_Memory_address_mux_select;
-    wire cu_ZF;
-    wire control_unit_scan_out;
-    wire pc_scan_out;
-    wire acc_scan_out;
-    wire ir_scan_out;
-    wire memory_scan_out;
-    wire zero_flag;
-
-    // Instantiate ALU
-    alu ALU_inst (
-        .A(alu_A),
-        .B(alu_B),
-        .opcode(cu_ALU_opcode),
-        .Y(alu_Y),
-        .locking_key(locking_key[15:8])
-    );
-
-    // Instantiate ALU Input A multiplexer (connected to ACC)
-    assign alu_A = acc_data_out;
-
-    // Instantiate ALU Input B multiplexer
-    wire [7:0] immediate;
-    assign immediate = {4'b0000, ir_data_out[3:0]}; // Immediate value is IR[3:0] with four zero-extended MSBs
-
-    assign alu_B = cu_ALU_inputB_mux_select ? immediate : memory_data_out;
-
-    // Remaining module instantiations and connections go here
-    // Instantiate PC
-    shift_register #(
-        .WIDTH(5)
-    ) PC_inst (
-        .clk(clk),
-        .rst(rst),
-        .enable(cu_PC_write_enable),
-        .data_in(pc_data_in),
-        .data_out(pc_data_out),
-        .scan_enable(scan_enable),
-        .scan_in(control_unit_scan_out),
-        .scan_out(pc_scan_out)
-    );
-    
-    // Instantiate PC multiplexer
-    wire [4:0] pc_plus_one = pc_data_out + 5'b1;
-    wire [4:0] pc_minus_three = pc_data_out - 5'b11;
-    // Declare additional wires for PC mux
-    wire [4:0] pc_plus_two = pc_data_out + 5'b10;
-
-    // Wire for locking key distribution
-    wire [15:0] locking_key; // 1101 0101 1100 1110 (0xD5 0xCE , decimal 213 206)
-
-    // Instantiate PC multiplexer
-    always @(*) begin
-        case(cu_PC_mux_select)
-            2'b00: pc_data_in = pc_plus_one;
-            2'b01: pc_data_in = acc_data_out[4:0];
-            2'b10: pc_data_in = pc_minus_three;
-            default: pc_data_in = pc_plus_two;
-        endcase
-    end
 
     
-    // Instantiate IR
-    shift_register #(
-        .WIDTH(8)
-    ) IR_inst (
-        .clk(clk),
-        .rst(rst),
-        .enable(cu_IR_load_enable),
-        .data_in(memory_data_out),
-        .data_out(ir_data_out),
-        .scan_enable(scan_enable),
-        .scan_in(pc_scan_out),
-        .scan_out(ir_scan_out)
-    );
-    
-    // Instantiate ACC
-    shift_register #(
-        .WIDTH(8)
-    ) ACC_inst (
-        .clk(clk),
-        .rst(rst),
-        .enable(cu_ACC_write_enable),
-        .data_in(acc_data_in),
-        .data_out(acc_data_out),
-        .scan_enable(scan_enable),
-        .scan_in(ir_scan_out),
-        .scan_out(acc_scan_out)
-    );
-    
-    // Instantiate ACC multiplexer
-    always @(*) begin
-        case(cu_ACC_mux_select)
-            2'b00: acc_data_in = alu_Y;
-            2'b01: acc_data_in = memory_data_out;
-            default: acc_data_in = {3'b000, pc_data_out};
-        endcase
-    end
+    // Internal Wires
 
-    
-    // Instantiate Memory Bank
-    memory_bank #(
-        .ADDR_WIDTH(5),
-        .DATA_WIDTH(8),
-        .MEM_SIZE(MEM_SIZE)
-    ) memory_inst (
-        .clk(clk),
-        .rst(rst),
-        .address(memory_address),
-        .data_in(acc_data_out),
-        .write_enable(cu_Memory_write_enable),
-        .data_out(memory_data_out),
-        .scan_enable(scan_enable),
-        .scan_in(acc_scan_out),
-        .scan_out(memory_scan_out),
+// Wires between the Control Unit and the Datapath
+wire PC_write_enable, ACC_write_enable, IR_load_enable, Memory_write_enable, CSR_write_enable, SEG_write_enable;
+wire [1:0] PC_mux_select, ACC_mux_select, Memory_address_mux_select, SEG_mux_select;
+wire [3:0] ALU_opcode;
+wire ALU_inputB_mux_select;
+wire illegal_segment_execution;
+wire ZF; // zero flag from ALU
 
-        // Locking key
-        .lock_out(locking_key),
+// PC - Program Counter
+wire [7:0] PC, PC_plus_one, PC_plus_offset, PC_minus_offset, next_PC;
 
-        // Connect btn_in and led_out
-        .btn_in(btn_in),
-        .led_out(led_out)
-    );
+// ACC - Accumulator
+wire [7:0] ACC, next_ACC;
 
-    
-    // Instantiate Memory Address Multiplexer
-    always @(*) begin
-        case(cu_Memory_address_mux_select)
-            2'b00: memory_address = ir_data_out[4:0];
-            2'b01: memory_address = acc_data_out[4:0];
-            default: memory_address = pc_data_out;
-        endcase
-    end
+// IR - Instruction Register
+wire [7:0] IR, next_IR;
 
-    
-    // Instantiate Control Unit
-    control_unit cu_inst (
-        .clk(clk),
-        .rst(rst),
-        .processor_enable(proc_en),
-        .processor_halted(halt),
-        .instruction(ir_data_out),
-        .ZF(zero_flag),
-    
-        .PC_write_enable(cu_PC_write_enable),
-        .PC_mux_select(cu_PC_mux_select),
-    
-        .ACC_write_enable(cu_ACC_write_enable),
-        .ACC_mux_select(cu_ACC_mux_select),
-    
-        .IR_load_enable(cu_IR_load_enable),
-    
-        .ALU_opcode(cu_ALU_opcode),
-        .ALU_inputB_mux_select(cu_ALU_inputB_mux_select),
-    
-        .Memory_write_enable(cu_Memory_write_enable),
-        .Memory_address_mux_select(cu_Memory_address_mux_select),
-    
-        .scan_enable(scan_enable),
-        .scan_in(scan_in),
-        .scan_out(control_unit_scan_out),
+// SEG - Segment Register
+wire [3:0] SEG, next_SEG;
 
-        .locking_key(locking_key[7:0])
-    );
-    
-    
-    // Generate zero_flag
-    assign zero_flag = (acc_data_out == 8'b0);
-    
-    // Connect top-level scan_out
-    assign scan_out = memory_scan_out;
+// ALU - Arithmetic and Logic Unit
+wire [7:0] ALU_result;
+
+// Memory
+wire [7:0] M_address;
+wire [7:0] M_data_in, M_data_out;
+
+// CSR - Control/Status Register
+wire [2:0] CSR_address;
+wire [7:0] CSR_data_in, CSR_data_out;
+
+// Immediate Values
+wire [7:0] IMM;
+
+// Sign + Offset for Branching Instructions
+wire sign;
+wire [2:0] offset;
+
+// Scan chain
+wire scan_in_PC, scan_out_PC;       // Scan chain connections for PC
+wire scan_in_ACC, scan_out_ACC;     // Scan chain connections for ACC
+wire scan_in_IR, scan_out_IR;       // Scan chain connections for IR
+wire scan_in_SEG, scan_out_SEG;     // Scan chain connections for SEG
+wire scan_in_memory, scan_out_memory; // Scan chain connections for memory
+wire scan_in_CSR, scan_out_CSR;     // Scan chain connections for CSR
+// Define scan chain wires for Control Unit
+wire scan_in_CU, scan_out_CU;
+
+control_unit ctrl_unit (
+    .clk(clk),                              // Connected to the clock
+    .rst(rst),                              // Connected to the reset signal
+    .processor_enable(proc_en),             // Connected to the processor enable signal
+    .illegal_segment_execution(illegal_segment_execution), // Illegal segment execution signal
+    .processor_halted(halt),                // Connected to the processor halted signal
+    .instruction(IR),                       // Connected to the instruction register output
+    .ZF(ZF),                                // Zero Flag input from ALU
+    .PC_write_enable(PC_write_enable),      // Enables writing to the PC
+    .PC_mux_select(PC_mux_select),          // Selects the input for the PC multiplexer
+    .ACC_write_enable(ACC_write_enable),    // Enables writing to the ACC
+    .ACC_mux_select(ACC_mux_select),        // Selects the input for the ACC multiplexer
+    .IR_load_enable(IR_load_enable),        // Enables loading new instruction into IR from memory
+    .ALU_opcode(ALU_opcode),                // Control signal specifying the ALU operation
+    .ALU_inputB_mux_select(ALU_inputB_mux_select), // Selects input B for the ALU multiplexer
+    .Memory_write_enable(Memory_write_enable), // Enables writing to memory
+    .Memory_address_mux_select(Memory_address_mux_select), // Selects input for memory address multiplexer
+    .CSR_write_enable(CSR_write_enable),    // Enables writing to CSR
+    .SEG_write_enable(SEG_write_enable),    // Enables writing to the Segment Register
+    .SEG_mux_select(SEG_mux_select),        // Selects the input for the Segment Register multiplexer
+    .scan_enable(scan_enable),            // Scan chain enable signal
+    .scan_in(scan_in_CU),                 // Scan chain input
+    .scan_out(scan_out_CU)                // Scan chain output
+);
+
+// Multiplexer for selecting SEG input
+wire [3:0] SEG_input;
+wire [3:0] IMM4 = IR[3:0];   // Immediate 4-bit value from instruction
+assign SEG_input = (SEG_mux_select) ? ACC[3:0] : IMM4;
+
+// SEG register instantiation
+shift_register #(
+    .WIDTH(4)  // Set width to 4 bits
+) SEG_Register (
+    .clk(clk),
+    .rst(rst),
+    .enable(SEG_write_enable),
+    .data_in(SEG_input),
+    .data_out(SEG),
+    .scan_enable(scan_enable),
+    .scan_in(scan_in_SEG),
+    .scan_out(scan_out_SEG)
+);
+
+// Define a 3-bit immediate value from the bottom three bits of the IR
+wire [2:0] IMM3 = IR[2:0];  
+
+// Multiplexer for selecting PC input
+wire [7:0] PC_input;
+assign PC_input = (PC_mux_select == 2'b00) ? PC + 8'b00000001 :   // PC + 1 for FETCH cycle
+                  (PC_mux_select == 2'b01) ? ACC :                // ACC for JMP and JSR
+                  (PC_mux_select == 2'b10) ? PC + {5'b0, IMM3} :  // PC + IMM for forward branches
+                  PC - {5'b0, IMM3};                              // PC - IMM for backward branches
+
+
+// PC register instantiation
+shift_register #(
+    .WIDTH(8)  // Set width to 8 bits
+) PC_Register (
+    .clk(clk),
+    .rst(rst),
+    .enable(PC_write_enable),
+    .data_in(PC_input),
+    .data_out(PC),
+    .scan_enable(scan_enable),            // Scan chain enable signal
+    .scan_in(scan_in_PC),                 // Scan chain input
+    .scan_out(scan_out_PC)                // Scan chain output
+);
+
+// IR register instantiation
+shift_register #(
+    .WIDTH(8)  // Set width to 8 bits
+) IR_Register (
+    .clk(clk),
+    .rst(rst),
+    .enable(IR_load_enable),
+    .data_in(M_data_out),
+    .data_out(IR),
+    .scan_enable(scan_enable),           // Scan chain enable signal
+    .scan_in(scan_in_IR),                // Scan chain input
+    .scan_out(scan_out_IR)               // Scan chain output
+);
+
+// Multiplexer for selecting ACC input
+wire [7:0] ACC_input;
+assign ACC_input = (ACC_mux_select == 2'b00) ? ALU_result :
+                   (ACC_mux_select == 2'b01) ? M_data_out :
+                   (ACC_mux_select == 2'b10) ? PC :
+                   CSR_data_out;
+
+// ACC register instantiation
+shift_register #(
+    .WIDTH(8)  // Set width to 8 bits
+) ACC_Register (
+    .clk(clk),
+    .rst(rst),
+    .enable(ACC_write_enable),
+    .data_in(ACC_input),
+    .data_out(ACC),
+    .scan_enable(scan_enable),          // Scan chain enable signal
+    .scan_in(scan_in_ACC),              // Scan chain input
+    .scan_out(scan_out_ACC)             // Scan chain output
+);
+
+// Define the ALU B input multiplexer
+wire [7:0] ALU_inputB;
+assign IMM = IR[3:0];
+assign ALU_inputB = (ALU_inputB_mux_select == 1'b0) ? M_data_out : IMM;
+
+// ALU instantiation
+alu ALU (
+    .A(ACC),
+    .B(ALU_inputB),
+    .opcode(ALU_opcode),
+    .Y(ALU_result)
+);
+
+// Multiplexer for selecting the memory address input
+wire [7:0] M_address_input;
+assign M_address_input = (Memory_address_mux_select == 2'b00) ? {SEG, IR[3:0]} :
+                         (Memory_address_mux_select == 2'b01) ? ACC :
+                         PC;
+
+// Memory bank instantiation
+memory_bank #(
+    .ADDR_WIDTH(8),
+    .DATA_WIDTH(8),
+    .MEM_SIZE(MEM_SIZE)
+) mem_bank (
+    .clk(clk),
+    .rst(rst),
+    .address(M_address_input),      // Connect the multiplexer output to the memory bank's address input
+    .data_in(ACC),                  // Example connection, replace with appropriate input
+    .write_enable(Memory_write_enable),  // Connect the control unit's memory write enable signal
+    .data_out(M_data_out),          // Example connection, replace with appropriate output
+    .scan_enable(scan_enable),      // Scan chain enable signal
+    .scan_in(scan_in_memory),       // Scan chain input
+    .scan_out(scan_out_memory)      // Scan chain output
+);
+
+wire [7:0] SEGEXE_L_OUT;   // Declare new wire for SEGEXE_L_OUT
+wire [7:0] SEGEXE_H_OUT;   // Declare new wire for SEGEXE_H_OUT
+
+wire [2:0] CSR_addr;             // Renamed wire for CSR address
+
+// Extract bottom 3 bits of the output of the instruction register (IR)
+assign CSR_addr = IR[2:0];
+
+Control_Status_Registers #(
+    .WIDTH(8)  // Set WIDTH to 8
+) csr_inst (
+    .clk(clk),
+    .rst(rst),
+    .addr(CSR_addr),                 // Connect CSR_addr to the bottom 3 bits of IR
+    .data_in(ACC),                   // Connect data_in to ACC
+    .wr_enable(CSR_write_enable),    // Connect wr_enable to CSR_write_enable
+    .IO_IN(IO_in),                   // Connect IO_in to IO_IN
+    .scan_enable(scan_enable),
+    .scan_in(scan_in_CSR),           // Renamed scan_in signal as scan_in_CSR
+    .scan_out(scan_out_CSR),         // Renamed scan_out signal as scan_out_CSR
+    .data_out(CSR_data_out),         // Connect data_out to CSR_data_out
+    .SEGEXE_L_OUT(SEGEXE_L_OUT),     // Connect SEGEXE_L_OUT to new wire
+    .SEGEXE_H_OUT(SEGEXE_H_OUT),     // Connect SEGEXE_H_OUT to new wire
+    .IO_OUT(IO_out),                 // Connect IO_out to IO_OUT
+    .INT_OUT(INT_out)
+);
+
+assign scan_in_CU = scan_in;           // Input to Control Unit (CU)
+assign scan_in_SEG = scan_out_CU;      // Input to SEG register
+assign scan_in_PC = scan_out_SEG;      // Input to PC register
+assign scan_in_IR = scan_out_PC;       // Input to IR register
+assign scan_in_ACC = scan_out_IR;      // Input to ACC register
+assign scan_in_CSR = scan_out_ACC;     // Input to CSR module
+assign scan_in_memory = scan_out_CSR;  // Input to memory bank
+assign scan_out = scan_out_memory;     // Output of memory bank (final scan chain output)
 
 
 endmodule
+`default_nettype wire
