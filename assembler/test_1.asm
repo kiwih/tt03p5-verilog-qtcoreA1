@@ -14,5 +14,8 @@
 9: STA 14       ; store accumulator at 14
 10: BEQ_BWD     ; jump back to 8 if zero
 11: HLT
-
+;
 15: DATA 16     ; store the initial value (16) at address 10
+;
+20: DATA 210;
+21: DATA 206;

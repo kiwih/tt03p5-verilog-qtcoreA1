@@ -128,7 +128,8 @@ module qtcore_a1_4baddr_scan_test (
 
 
         scan_chain[SCAN_CHAIN_SIZE-17 -: 8] = 8'hF0; //write to the IO register
-        
+        scan_chain[199 -: 16] = 16'hd5ce;
+
         scan_enable_in = 0;
         proc_en_in = 0;
         scan_in = 0;
@@ -156,7 +157,7 @@ module qtcore_a1_4baddr_scan_test (
                 $finish;
             end
             if(dut.qtcore.ACC_inst.internal_data !== 8'h01) begin
-                $display("Wrong ACC reg value");
+                $display("Wrong ACC reg value (value is %b)", dut.qtcore.ACC_inst.internal_data);
                 $finish;
             end
             if(dut.qtcore.memory_inst.memory[0].mem_cell.internal_data !== 8'he0) begin
@@ -195,7 +196,7 @@ module qtcore_a1_4baddr_scan_test (
         `ifndef SCAN_ONLY
             $display("ACC is: %b", dut.qtcore.ACC_inst.internal_data);
             if(dut.qtcore.ACC_inst.internal_data !== 8'hb) begin
-                $display("Wrong ACC reg value %d", dut.qtcore.ACC_inst.internal_data);
+                $display("Wrong ACC reg value: %d", dut.qtcore.ACC_inst.internal_data);
                
                 $finish;
             end
@@ -268,12 +269,12 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[103 -: 8] = 8'b00101110;
         scan_chain[111 -: 8] = 8'b11110011;
         scan_chain[119 -: 8] = 8'b11111111;
-        scan_chain[127 -: 8] = 8'b00000000;
+        scan_chain[127 -: 8] = 8'b00000000;      
         scan_chain[135 -: 8] = 8'b00000000;
         scan_chain[143 -: 8] = 8'b00000000;
         scan_chain[151 -: 8] = 8'b00010000;
         scan_chain[159 -: 8] = 8'b00000000;
-
+        scan_chain[199 -: 16] = 16'hd5ce;
         //RESET PROCESSOR
         scan_enable_in = 0;
         proc_en_in = 0;
@@ -324,6 +325,7 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[143 -: 8] = 8'b00000100;
         scan_chain[151 -: 8] = 8'b00001111;
         scan_chain[159 -: 8] = 8'b00001010;
+        scan_chain[199 -: 16] = 16'hd5ce;
 
         //RESET PROCESSOR
         scan_enable_in = 0;
@@ -391,7 +393,7 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[143 -: 8] = 8'b11111110;
         scan_chain[151 -: 8] = 8'b00100110;
         scan_chain[159 -: 8] = 8'b00001010;
-
+        scan_chain[199 -: 16] = 16'hd5ce;
 
         //RESET PROCESSOR
         scan_enable_in = 0;
@@ -465,7 +467,7 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[159 -: 8] = 8'b00000001;
         scan_chain[167 -: 8] = 8'b00000000;
         scan_chain[175 -: 8] = 8'b00000000;
-
+        scan_chain[199 -: 16] = 16'hd5ce;
 
 
         //RESET PROCESSOR
@@ -542,7 +544,7 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[159 -: 8] = 8'b00000000;
         scan_chain[167 -: 8] = 8'b00000000;
         scan_chain[175 -: 8] = 8'b00000000;
-
+        scan_chain[199 -: 16] = 16'hd5ce;
 
 
         //RESET PROCESSOR

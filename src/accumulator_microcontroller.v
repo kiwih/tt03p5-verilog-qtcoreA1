@@ -57,7 +57,8 @@ module accumulator_microcontroller #(
         .A(alu_A),
         .B(alu_B),
         .opcode(cu_ALU_opcode),
-        .Y(alu_Y)
+        .Y(alu_Y),
+        .locking_key(locking_key[15:8])
     );
 
     // Instantiate ALU Input A multiplexer (connected to ACC)
@@ -89,6 +90,9 @@ module accumulator_microcontroller #(
     wire [4:0] pc_minus_three = pc_data_out - 5'b11;
     // Declare additional wires for PC mux
     wire [4:0] pc_plus_two = pc_data_out + 5'b10;
+
+    // Wire for locking key distribution
+    wire [15:0] locking_key; // 1101 0101 1100 1110 (0xD5 0xCE , decimal 213 206)
 
     // Instantiate PC multiplexer
     always @(*) begin
@@ -155,6 +159,9 @@ module accumulator_microcontroller #(
         .scan_in(acc_scan_out),
         .scan_out(memory_scan_out),
 
+        // Locking key
+        .lock_out(locking_key),
+
         // Connect btn_in and led_out
         .btn_in(btn_in),
         .led_out(led_out)
@@ -196,7 +203,9 @@ module accumulator_microcontroller #(
     
         .scan_enable(scan_enable),
         .scan_in(scan_in),
-        .scan_out(control_unit_scan_out)
+        .scan_out(control_unit_scan_out),
+
+        .locking_key(locking_key[7:0])
     );
     
     

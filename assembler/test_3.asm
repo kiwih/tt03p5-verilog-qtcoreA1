@@ -12,7 +12,10 @@
 10: STA 4       ; set M[4] to 15
 11: XOR 13      ; XOR M[13](ff) with 15, should become f0
 12: STA 5       ; set M[5] to f0
-13: HLT
-14: DATA 4
-15: DATA 15
-16: DATA 10
+13: HLT;
+14: DATA 4;
+15: DATA 15;
+16: DATA 10;
+;
+20: DATA 210;
+21: DATA 206;

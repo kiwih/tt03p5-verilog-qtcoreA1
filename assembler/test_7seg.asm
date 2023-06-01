@@ -14,3 +14,6 @@
 7: CLR
 8: JMP
 16: DATA 0
+;
+20: DATA 210;
+21: DATA 206;
