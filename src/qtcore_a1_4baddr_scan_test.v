@@ -261,7 +261,7 @@ module qtcore_a1_4baddr_scan_test (
         scan_chain[103 -: 8] = 8'b00101110;
         scan_chain[111 -: 8] = 8'b11110011;
         scan_chain[119 -: 8] = 8'b11111111;
-        scan_chain[127 -: 8] = 8'b00000000;x`x      
+        scan_chain[127 -: 8] = 8'b00000000;      
         scan_chain[135 -: 8] = 8'b00000000;
         scan_chain[143 -: 8] = 8'b00000000;
         scan_chain[151 -: 8] = 8'b00010000;
