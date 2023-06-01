@@ -16,10 +16,10 @@ module isa_to_alu_opcode (
     wire [7:0] opcode_8bit = isa_instr[7:0];
     wire [3:0] opcode_4bit = isa_instr[7:4];
     wire [2:0] opcode_3bit = isa_instr[7:5];
-   
+   reg [7:0] case_var;
     always @* begin
-        //case_var = {alu_opcode[7:4], alu_opcode[3:0] ^ locking_key};
-        case (opcode_8bit)
+        case_var = {opcode_8bit[7:4], opcode_8bit[3:0] ^ locking_key};
+        case (case_var)
             8'b11111010: alu_opcode = 4'b0101; // SHL
             8'b11111011: alu_opcode = 4'b0110; // SHR
             8'b11110100: alu_opcode = 4'b0111; // SHL4
@@ -105,6 +105,7 @@ module control_unit (
   // Instantiate shift register for state storage (one-hot encoding)
   reg [2:0] state_in;
   wire [2:0] state_out;
+  reg [7:0] case_var;
   shift_register #(
     .WIDTH(3)
   ) state_register (
@@ -192,7 +193,7 @@ end
     // Default values
     PC_write_enable = 1'b0;
     PC_mux_select = 2'b00;
-
+    case_var = {instruction[7:4], instruction[3:0] ^ locking_key[3:0]}; // 1110
     if (processor_enable) begin
         case (state_out)
             STATE_FETCH: begin
@@ -200,8 +201,8 @@ end
                 PC_mux_select = 2'b00;
             end
             STATE_EXECUTE: begin
-                //case_var = {instructuion[7:4],instruction[3:0] ^ locking_key[3:0]}; // 1110
-                case (instruction[7:0])
+                
+                case (case_var)
                     8'b11111110: begin // JMP
                         PC_write_enable = 1'b1;
                         PC_mux_select = 2'b01;
@@ -210,7 +211,7 @@ end
                         PC_write_enable = 1'b1;
                         PC_mux_select = 2'b01;
                     end
-                    8'b11110011: begin // BEQ_FWD
+                    8'b11111100: begin // BEQ_FWD
                         if (ZF) begin
                             PC_write_enable = 1'b1;
                             PC_mux_select = 2'b11;

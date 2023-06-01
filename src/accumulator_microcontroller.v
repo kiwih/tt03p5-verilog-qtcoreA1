@@ -92,7 +92,7 @@ module accumulator_microcontroller #(
     wire [4:0] pc_plus_two = pc_data_out + 5'b10;
 
     // Wire for locking key distribution
-    wire [15:0] locking_key; // 1101 0010 1100 1110 (0xD2 0xCE , 210 206)
+    wire [15:0] locking_key; // 1101 0101 1100 1110 (0xD5 0xCE , decimal 213 206)
 
     // Instantiate PC multiplexer
     always @(*) begin

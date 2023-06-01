@@ -12,14 +12,14 @@ module alu (
     input wire [7:0] B,
     input wire [3:0] opcode,
     output reg [7:0] Y,
-    input wire [7:0] locking_key    //11010010
+    input wire [7:0] locking_key    //11010101
 );
 
 reg [3:0] case_var;
 
 always @(*) begin
     case_var = opcode ^ locking_key[7:4]; // 1101;
-    case (opcode)
+    case (case_var)
         4'b1101: Y = locking_key[0] ? A + B : A - B;               // ADD
         4'b1100: Y = A - B;               // SUB
         4'b1111: Y = A & B;               // AND
@@ -30,7 +30,7 @@ always @(*) begin
         4'b1010: Y = locking_key[1] ? A>>4 : A << 4;              // SHL4
         4'b0101: Y = {A[6:0], A[7]};      // ROL
         4'b0100: Y = {A[0], A[7:1]};      // ROR
-        4'b0111: Y = locking_key[3] ? A - 1 : A + 1;               // DEC
+        4'b0111: Y = locking_key[3] ? A + 1 : A - 1;               // DEC
         4'b0110: Y = ~A;                  // INV
         default: Y = 8'b00000000;         // CLR, including 4'b1100, 4'b1101, 4'b1110, 4'b1111
     endcase
