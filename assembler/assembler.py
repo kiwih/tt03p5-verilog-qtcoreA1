@@ -113,3 +113,26 @@ with open(sys.argv[1].replace('.asm', '.scanchain.v'), 'w') as f:
     for addr, value in enumerate(binary_program):
         if(value != 0):
             f.write(f'scan_chain[SCAN_MEM0_INDEX + {addr}*8 +: 8] = 8\'b{value:08b};\n')
+
+# save the assembled program to a file with the same name as the input file but with .caravel.c extension
+with open(sys.argv[1].replace('.asm', '.caravel.c'), 'w') as f:
+    f.write("uint8_t program[] = {\n")
+    # reverse the program so that the first instruction is at the end of the array
+    binary_program.reverse()
+    # for each 4 instructions, print them in reverse order
+    for i in range(0, len(binary_program), 4):
+        f.write(f'\t0x{binary_program[i]:02x}{binary_program[i+1]:02x}{binary_program[i+2]:02x}{binary_program[i+3]:02x},//MEM[{255-i}:{255-i-3}]\n')
+   
+    f.write('\t0b00000000000000000000000000000000, //TEMP, STATUS_CTRL, CNT_H, CNT_L\n')
+    # f.write('\t0b, //STATUS_CTRL\n')
+    # f.write('\t0b, //CNT_H\n')
+    # f.write('\t0b, //CNT_L\n')
+    f.write('\t0b00000000000000000000000000000000, //IO_OUT, IO_IN, SEG_EXE_H, SEG_EXE_L\n')
+    # f.write('\t0b, //IO_IN\n')
+    # f.write('\t0b, //SEG_EXE_H\n')
+    # f.write('\t0b, //SEG_EXE_L\n')
+    f.write('\t0b00000000000000000000000000000010, //ACC, IR, PC, SEG[4 bit], CU[3 bit]\n')
+    # f.write('\t0b, //IR\n')
+    # f.write('\t0b, //PC\n')
+    # f.write('\t0b, //SEG[4bit]_CU[3bit]\n')
+    f.write('};')

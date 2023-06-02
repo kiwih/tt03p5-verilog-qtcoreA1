@@ -33,6 +33,11 @@ module qtcore_a1_4baddr_scan_test (
     localparam SCAN_CSR_TEMP_INDEX = 88;
     localparam SCAN_MEM0_INDEX = 96;
 
+    localparam DO_TEST_0 = 1;
+    localparam DO_TEST_1 = 1;
+    localparam DO_TEST_2 = 1;
+    localparam DO_TEST_3 = 1;
+
     reg [7:0] io_in;
     wire [7:0] io_out;
     wire scan_out, halt_out;
@@ -117,361 +122,455 @@ module qtcore_a1_4baddr_scan_test (
         `ifdef SCAN_ONLY
             $display("SCAN ONLY");
         `endif
-        $display("TEST 0 (SCAN CHAIN LOAD/UNLOAD)");
 
-        // TEST PART 1: LOAD SCAN CHAIN
+        if (DO_TEST_0) begin
+            $display("TEST 0 (SCAN CHAIN LOAD/UNLOAD)");
 
-        scan_chain = 'b0;
-        scan_chain[SCAN_CU_INDEX +: 3] = 3'b001; //state = fetch
-        scan_chain[SCAN_SEG_INDEX +: 4] = 4'b0000; //SEG = 0
-        scan_chain[SCAN_PC_INDEX +: 8] = 8'h10;    //PC = 16
-        scan_chain[SCAN_IR_INDEX +: 8] = 8'hfe; //IR = 0xFE
-        scan_chain[SCAN_ACC_INDEX +: 8] = 8'h0C; //ACC = 0x0C
-        scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] = 8'hFF; //SEGEXE_L = 0xFF
-        scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] = 8'h00; //SEGEXE_H = 0x00
-        scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] = 8'h00; //IO_IN = 0x00
-        scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] = 8'hFF; //IO_OUT = 0xFF
-        scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] = 8'h00; //CNT_L = 0x00
-        scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] = 8'hFF; //CNT_H = 0xFF
-        scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] = 8'h00; //STATUS_CTRL = 0x00
-        scan_chain[SCAN_CSR_TEMP_INDEX +: 8] = 8'hFF; //TEMP = 0xFF
-        for (i = 0; i < FULL_MEM_SIZE; i = i + 1) begin
-            scan_chain[SCAN_MEM0_INDEX + 8*i +: 8] = i; //MEM[i] = i
-        end
-        // scan_chain[SCAN_MEM0_INDEX +: 8] = 8'hde; //MEM[0] = 0xde
-        // scan_chain[SCAN_MEM0_INDEX+8 +: 8] = 8'had; //MEM[1] = 0xad
-        // scan_chain[SCAN_MEM0_INDEX+16 +: 8] = 8'hc0; //MEM[2] = 0xc0
-        // scan_chain[SCAN_MEM0_INDEX+24 +: 8] = 8'hde; //MEM[3] = 0xde
+            // TEST PART 1: LOAD SCAN CHAIN
 
-        //scan_chain[2:0] = 3'b001;  
-        /*scan_chain[7:3] = 5'h1;    //PC = 1
-        scan_chain[15:8] = 8'he0; //IR = ADDI 0 (NOP), should get overrwritten by MEM[2]
-        scan_chain[23:16] = 8'h01; //ACC = 0x01
-        scan_chain[31 -: 8] = 8'he0; //MEM[0] = 0xE0
-        scan_chain[39 -: 8] = 8'he1; //MEM[1] = 0xE1 (ADDI 1)
-        scan_chain[47 -: 8] = 8'he2; //MEM[2] = 0xE2 (ADDI 2)
-        scan_chain[55 -: 8] = 8'he3; //MEM[3] = 0xE3 (ADDI 3)
-        scan_chain[63 -: 8] = 8'he4; //MEM[4] = 0xE4 (ADDI 4)
+            scan_chain = 'b0;
+            scan_chain[SCAN_CU_INDEX +: 3] = 3'b001; //state = fetch
+            scan_chain[SCAN_SEG_INDEX +: 4] = 4'b0000; //SEG = 0
+            scan_chain[SCAN_PC_INDEX +: 8] = 8'h10;    //PC = 16
+            scan_chain[SCAN_IR_INDEX +: 8] = 8'hfe; //IR = 0xFE
+            scan_chain[SCAN_ACC_INDEX +: 8] = 8'h0C; //ACC = 0x0C
+            scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] = 8'hFF; //SEGEXE_L = 0xFF
+            scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] = 8'h00; //SEGEXE_H = 0x00
+            scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] = 8'h00; //IO_IN = 0x00
+            scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] = 8'hFF; //IO_OUT = 0xFF
+            scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] = 8'h00; //CNT_L = 0x00
+            scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] = 8'hFF; //CNT_H = 0xFF
+            scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] = 8'h00; //STATUS_CTRL = 0x00
+            scan_chain[SCAN_CSR_TEMP_INDEX +: 8] = 8'hFF; //TEMP = 0xFF
+            for (i = 0; i < FULL_MEM_SIZE; i = i + 1) begin
+                scan_chain[SCAN_MEM0_INDEX + 8*i +: 8] = i; //MEM[i] = i
+            end
+            // scan_chain[SCAN_MEM0_INDEX +: 8] = 8'hde; //MEM[0] = 0xde
+            // scan_chain[SCAN_MEM0_INDEX+8 +: 8] = 8'had; //MEM[1] = 0xad
+            // scan_chain[SCAN_MEM0_INDEX+16 +: 8] = 8'hc0; //MEM[2] = 0xc0
+            // scan_chain[SCAN_MEM0_INDEX+24 +: 8] = 8'hde; //MEM[3] = 0xde
 
-        scan_chain[SCAN_CHAIN_SIZE-17 -: 8] = 8'hF0; //write to the IO register
-        scan_chain[199 -: 16] = 16'hd5ce;*/
+            //scan_chain[2:0] = 3'b001;  
+            /*scan_chain[7:3] = 5'h1;    //PC = 1
+            scan_chain[15:8] = 8'he0; //IR = ADDI 0 (NOP), should get overrwritten by MEM[2]
+            scan_chain[23:16] = 8'h01; //ACC = 0x01
+            scan_chain[31 -: 8] = 8'he0; //MEM[0] = 0xE0
+            scan_chain[39 -: 8] = 8'he1; //MEM[1] = 0xE1 (ADDI 1)
+            scan_chain[47 -: 8] = 8'he2; //MEM[2] = 0xE2 (ADDI 2)
+            scan_chain[55 -: 8] = 8'he3; //MEM[3] = 0xE3 (ADDI 3)
+            scan_chain[63 -: 8] = 8'he4; //MEM[4] = 0xE4 (ADDI 4)
 
-        scan_enable_in = 0;
-        proc_en_in = 0;
-        scan_in = 0;
-        clk_in = 0;
-        rst_in = 0;
-        io_in = 0;
-        
-        //TEST 0: reset the processor
-        reset_processor;
-        
-        xchg_scan_chain;
-        
-        
+            scan_chain[SCAN_CHAIN_SIZE-17 -: 8] = 8'hF0; //write to the IO register
+            scan_chain[199 -: 16] = 16'hd5ce;*/
 
-        `ifndef SCAN_ONLY
-            $display("Design not gatelevel, running internal checks");
-            if(dut.ctrl_unit.state_register.internal_data !== 3'b001) begin
-                $display("Wrong state reg value");
-                $finish;
-            end
-            if(dut.SEG_Register.internal_data !== 4'b0000) begin
-                $display("Wrong SEG reg value");
-                $finish;
-            end
-            if(dut.PC_Register.internal_data !== 8'h10) begin
-                $display("Wrong PC reg value");
-                $finish;
-            end
-            if(dut.IR_Register.internal_data !== 8'hfe) begin
-                $display("Wrong IR reg value");
-                $finish;
-            end
-            if(dut.ACC_Register.internal_data !== 8'h0c) begin
-                $display("Wrong ACC reg value (value is %b)", dut.ACC_Register.internal_data);
-                $finish;
-            end
-            if(dut.csr_inst.segexe_l_reg.internal_data !== 8'hff) begin
-                $display("Wrong SEGEXE_L reg value");
-                $finish;
-            end
-            if(dut.csr_inst.segexe_h_reg.internal_data !== 8'h00) begin
-                $display("Wrong SEGEXE_H reg value");
-                $finish;
-            end
-            if(dut.csr_inst.io_in_reg.internal_data !== 8'h00) begin
-                $display("Wrong IO_IN reg value");
-                $finish;
-            end
-            if(dut.csr_inst.io_out_reg.internal_data !== 8'hff) begin
-                $display("Wrong IO_OUT reg value");
-                $finish;
-            end
-            if(dut.csr_inst.cnt_l_reg.internal_data !== 8'h00) begin
-                $display("Wrong CNT_L reg value");
-                $finish;
-            end
-            if(dut.csr_inst.cnt_h_reg.internal_data !== 8'hff) begin
-                $display("Wrong CNT_H reg value");
-                $finish;
-            end
-            if(dut.csr_inst.status_ctrl_reg.internal_data !== 8'h00) begin
-                $display("Wrong STATUS_CTRL reg value");
-                $finish;
-            end
-            if(dut.csr_inst.temp_reg.internal_data !== 8'hff) begin
-                $display("Wrong TEMP reg value");
-                $finish;
-            end
-            // for(i = 0; i < FULL_MEM_SIZE; i = i + 1) begin //can't do this for some reason?
-            //     if(dut.mem_bank.memory[i].mem_cell.internal_data !== i) begin
-            //         $display("Wrong mem[%d] reg value", i);
-            //         $finish;
-            //     end
-            // end
-            if(dut.mem_bank.memory[0].mem_cell.internal_data !== 8'h00) begin
-                $display("Wrong mem[0] reg value, got %b", dut.mem_bank.memory[0].mem_cell.internal_data);
-                $finish;
-            end
-            if(dut.mem_bank.memory[1].mem_cell.internal_data !== 8'h01) begin
-                $display("Wrong mem[1] reg value");
-                $finish;
-            end
-            if(dut.mem_bank.memory[2].mem_cell.internal_data !== 8'h02) begin
-                $display("Wrong mem[2] reg value");
-                $finish;
-            end
-            //skip to 16
-            if(dut.mem_bank.memory[16].mem_cell.internal_data !== 8'h10) begin
-                $display("Wrong mem[16] reg value");
-                $finish;
-            end
-            //skip to 80
-            if(dut.mem_bank.memory[80].mem_cell.internal_data !== 8'h50) begin
-                $display("Wrong mem[80] reg value");
-                $finish;
-            end
-            //skip to 123
-            if(dut.mem_bank.memory[123].mem_cell.internal_data !== 8'h7b) begin
-                $display("Wrong mem[123] reg value");
-                $finish;
-            end
-            //skip to 199
-            if(dut.mem_bank.memory[199].mem_cell.internal_data !== 8'hc7) begin
-                $display("Wrong mem[199] reg value");
-                $finish;
-            end
-            //skip to 254
-            if(dut.mem_bank.memory[254].mem_cell.internal_data !== 8'hfe) begin
-                $display("Wrong mem[254] reg value");
-                $finish;
-            end
-            //skip to 255
-            if(dut.mem_bank.memory[255].mem_cell.internal_data !== 8'hff) begin
-                $display("Wrong mem[255] reg value");
-                $finish;
-            end
+            scan_enable_in = 0;
+            proc_en_in = 0;
+            scan_in = 0;
+            clk_in = 0;
+            rst_in = 0;
+            io_in = 0;
             
-        `endif
+            //TEST 0: reset the processor
+            reset_processor;
+            
+            xchg_scan_chain;
+            
+            
 
-        $display("Scan load successful");
-        
-        //TEST PART B: UNLOAD SCAN CHAIN 
-        
-        xchg_scan_chain;
-        
-        if(scan_chain[SCAN_CU_INDEX +: 3] !== 3'b001) begin //state = fetch
-            $display("Wrong unloaded state reg, got %b", scan_chain[SCAN_CU_INDEX +: 3]);
-            $finish;
-        end
-        if(scan_chain[SCAN_SEG_INDEX +: 4] !== 4'b0000) begin //SEG = 0
-            $display("Wrong unloaded SEG reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_PC_INDEX +: 8] !== 8'h10) begin    //PC = 16
-            $display("Wrong unloaded PC reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_IR_INDEX +: 8] !== 8'hfe) begin //IR = 0xFE
-            $display("Wrong unloaded IR reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_ACC_INDEX +: 8] !== 8'h0C) begin //ACC = 0x0C
-            $display("Wrong unloaded ACC reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] !== 8'hFF) begin //SEGEXE_L = 0xFF
-            $display("Wrong unloaded SEGEXE_L reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] !== 8'h00) begin //SEGEXE_H = 0x00
-            $display("Wrong unloaded SEGEXE_H reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] !== 8'h00) begin //IO_IN = 0x00
-            $display("Wrong unloaded IO_IN reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] !== 8'hFF) begin //IO_OUT = 0xFF
-            $display("Wrong unloaded IO_OUT reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] !== 8'h00) begin //CNT_L = 0x00
-            $display("Wrong unloaded CNT_L reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] !== 8'hFF) begin //CNT_H = 0xFF
-            $display("Wrong unloaded CNT_H reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] !== 8'h00) begin //STATUS_CTRL = 0x00
-            $display("Wrong unloaded STATUS_CTRL reg");
-            $finish;
-        end
-        if(scan_chain[SCAN_CSR_TEMP_INDEX +: 8] !== 8'hFF) begin //TEMP = 0xFF
-            $display("Wrong unloaded TEMP reg");
-            $finish;
-        end
-        for (i = 0; i < FULL_MEM_SIZE; i = i + 1) begin
-            if(scan_chain[SCAN_MEM0_INDEX + 8*i +: 8] !== i) begin //MEM[i] = i
-                $display("Wrong unloaded mem[%d] reg", i);
+            `ifndef SCAN_ONLY
+                $display("Design not gatelevel, running internal checks");
+                if(dut.ctrl_unit.state_register.internal_data !== 3'b001) begin
+                    $display("Wrong state reg value");
+                    $finish;
+                end
+                if(dut.SEG_Register.internal_data !== 4'b0000) begin
+                    $display("Wrong SEG reg value");
+                    $finish;
+                end
+                if(dut.PC_Register.internal_data !== 8'h10) begin
+                    $display("Wrong PC reg value");
+                    $finish;
+                end
+                if(dut.IR_Register.internal_data !== 8'hfe) begin
+                    $display("Wrong IR reg value");
+                    $finish;
+                end
+                if(dut.ACC_Register.internal_data !== 8'h0c) begin
+                    $display("Wrong ACC reg value (value is %b)", dut.ACC_Register.internal_data);
+                    $finish;
+                end
+                if(dut.csr_inst.segexe_l_reg.internal_data !== 8'hff) begin
+                    $display("Wrong SEGEXE_L reg value");
+                    $finish;
+                end
+                if(dut.csr_inst.segexe_h_reg.internal_data !== 8'h00) begin
+                    $display("Wrong SEGEXE_H reg value");
+                    $finish;
+                end
+                if(dut.csr_inst.io_in_reg.internal_data !== 8'h00) begin
+                    $display("Wrong IO_IN reg value");
+                    $finish;
+                end
+                if(dut.csr_inst.io_out_reg.internal_data !== 8'hff) begin
+                    $display("Wrong IO_OUT reg value");
+                    $finish;
+                end
+                if(dut.csr_inst.cnt_l_reg.internal_data !== 8'h00) begin
+                    $display("Wrong CNT_L reg value");
+                    $finish;
+                end
+                if(dut.csr_inst.cnt_h_reg.internal_data !== 8'hff) begin
+                    $display("Wrong CNT_H reg value");
+                    $finish;
+                end
+                if(dut.csr_inst.status_ctrl_reg.internal_data !== 8'h00) begin
+                    $display("Wrong STATUS_CTRL reg value");
+                    $finish;
+                end
+                if(dut.csr_inst.temp_reg.internal_data !== 8'hff) begin
+                    $display("Wrong TEMP reg value");
+                    $finish;
+                end
+                // for(i = 0; i < FULL_MEM_SIZE; i = i + 1) begin //can't do this for some reason?
+                //     if(dut.mem_bank.memory[i].mem_cell.internal_data !== i) begin
+                //         $display("Wrong mem[%d] reg value", i);
+                //         $finish;
+                //     end
+                // end
+                if(dut.mem_bank.memory[0].mem_cell.internal_data !== 8'h00) begin
+                    $display("Wrong mem[0] reg value, got %b", dut.mem_bank.memory[0].mem_cell.internal_data);
+                    $finish;
+                end
+                if(dut.mem_bank.memory[1].mem_cell.internal_data !== 8'h01) begin
+                    $display("Wrong mem[1] reg value");
+                    $finish;
+                end
+                if(dut.mem_bank.memory[2].mem_cell.internal_data !== 8'h02) begin
+                    $display("Wrong mem[2] reg value");
+                    $finish;
+                end
+                //skip to 16
+                if(dut.mem_bank.memory[16].mem_cell.internal_data !== 8'h10) begin
+                    $display("Wrong mem[16] reg value");
+                    $finish;
+                end
+                //skip to 80
+                if(dut.mem_bank.memory[80].mem_cell.internal_data !== 8'h50) begin
+                    $display("Wrong mem[80] reg value");
+                    $finish;
+                end
+                //skip to 123
+                if(dut.mem_bank.memory[123].mem_cell.internal_data !== 8'h7b) begin
+                    $display("Wrong mem[123] reg value");
+                    $finish;
+                end
+                //skip to 199
+                if(dut.mem_bank.memory[199].mem_cell.internal_data !== 8'hc7) begin
+                    $display("Wrong mem[199] reg value");
+                    $finish;
+                end
+                //skip to 254
+                if(dut.mem_bank.memory[254].mem_cell.internal_data !== 8'hfe) begin
+                    $display("Wrong mem[254] reg value");
+                    $finish;
+                end
+                //skip to 255
+                if(dut.mem_bank.memory[255].mem_cell.internal_data !== 8'hff) begin
+                    $display("Wrong mem[255] reg value");
+                    $finish;
+                end
+                
+            `endif
+
+            $display("Scan load successful");
+            
+            //TEST PART B: UNLOAD SCAN CHAIN 
+            
+            xchg_scan_chain;
+            
+            if(scan_chain[SCAN_CU_INDEX +: 3] !== 3'b001) begin //state = fetch
+                $display("Wrong unloaded state reg, got %b", scan_chain[SCAN_CU_INDEX +: 3]);
                 $finish;
             end
+            if(scan_chain[SCAN_SEG_INDEX +: 4] !== 4'b0000) begin //SEG = 0
+                $display("Wrong unloaded SEG reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_PC_INDEX +: 8] !== 8'h10) begin    //PC = 16
+                $display("Wrong unloaded PC reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_IR_INDEX +: 8] !== 8'hfe) begin //IR = 0xFE
+                $display("Wrong unloaded IR reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_ACC_INDEX +: 8] !== 8'h0C) begin //ACC = 0x0C
+                $display("Wrong unloaded ACC reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] !== 8'hFF) begin //SEGEXE_L = 0xFF
+                $display("Wrong unloaded SEGEXE_L reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] !== 8'h00) begin //SEGEXE_H = 0x00
+                $display("Wrong unloaded SEGEXE_H reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] !== 8'h00) begin //IO_IN = 0x00
+                $display("Wrong unloaded IO_IN reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] !== 8'hFF) begin //IO_OUT = 0xFF
+                $display("Wrong unloaded IO_OUT reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] !== 8'h00) begin //CNT_L = 0x00
+                $display("Wrong unloaded CNT_L reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] !== 8'hFF) begin //CNT_H = 0xFF
+                $display("Wrong unloaded CNT_H reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] !== 8'h00) begin //STATUS_CTRL = 0x00
+                $display("Wrong unloaded STATUS_CTRL reg");
+                $finish;
+            end
+            if(scan_chain[SCAN_CSR_TEMP_INDEX +: 8] !== 8'hFF) begin //TEMP = 0xFF
+                $display("Wrong unloaded TEMP reg");
+                $finish;
+            end
+            for (i = 0; i < FULL_MEM_SIZE; i = i + 1) begin
+                if(scan_chain[SCAN_MEM0_INDEX + 8*i +: 8] !== i) begin //MEM[i] = i
+                    $display("Wrong unloaded mem[%d] reg", i);
+                    $finish;
+                end
+            end
+            $display("Unload scan chain successful");
         end
-        $display("Unload scan chain successful");
-
         
-        $display("TEST 1: test_1.asm");
+        if(DO_TEST_1) begin
+            $display("TEST 1: test_1.asm");
+            scan_chain = 'b0;
+            scan_chain[SCAN_CU_INDEX +: 3] = 3'b001; //state = fetch
+            scan_chain[SCAN_SEG_INDEX +: 4] = 4'b0000; //SEG = 0
+            scan_chain[SCAN_PC_INDEX +: 8] = 8'h00;    //PC = 00
+            scan_chain[SCAN_IR_INDEX +: 8] = 8'h00; //IR = 0x00
+            scan_chain[SCAN_ACC_INDEX +: 8] = 8'h00; //ACC = 0x00
+            scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] = 8'hFF; //SEGEXE_L = 0xFF
+            scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] = 8'h00; //SEGEXE_H = 0x00
+            scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] = 8'h00; //IO_IN = 0x00
+            scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] = 8'h00; //IO_OUT = 0x00
+            scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] = 8'h00; //CNT_L = 0x00
+            scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] = 8'h00; //CNT_H = 0x00
+            scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] = 8'h00; //STATUS_CTRL = 0x00
+            scan_chain[SCAN_CSR_TEMP_INDEX +: 8] = 8'h00; //TEMP = 0x00
 
-        scan_chain = 'b0;
-        scan_chain[SCAN_CU_INDEX +: 3] = 3'b001; //state = fetch
-        scan_chain[SCAN_SEG_INDEX +: 4] = 4'b0000; //SEG = 0
-        scan_chain[SCAN_PC_INDEX +: 8] = 8'h00;    //PC = 00
-        scan_chain[SCAN_IR_INDEX +: 8] = 8'h00; //IR = 0x00
-        scan_chain[SCAN_ACC_INDEX +: 8] = 8'h00; //ACC = 0x00
-        scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] = 8'hFF; //SEGEXE_L = 0xFF
-        scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] = 8'h00; //SEGEXE_H = 0x00
-        scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] = 8'h00; //IO_IN = 0x00
-        scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] = 8'h00; //IO_OUT = 0x00
-        scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] = 8'h00; //CNT_L = 0x00
-        scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] = 8'h00; //CNT_H = 0x00
-        scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] = 8'h00; //STATUS_CTRL = 0x00
-        scan_chain[SCAN_CSR_TEMP_INDEX +: 8] = 8'h00; //TEMP = 0x00
+            scan_chain[SCAN_MEM0_INDEX + 0*8 +: 8] = 8'b00001111;
+            scan_chain[SCAN_MEM0_INDEX + 1*8 +: 8] = 8'b11000011;
+            scan_chain[SCAN_MEM0_INDEX + 2*8 +: 8] = 8'b11111100;
+            scan_chain[SCAN_MEM0_INDEX + 3*8 +: 8] = 8'b00011111;
+            scan_chain[SCAN_MEM0_INDEX + 4*8 +: 8] = 8'b11011010;
+            scan_chain[SCAN_MEM0_INDEX + 5*8 +: 8] = 8'b10011111;
+            scan_chain[SCAN_MEM0_INDEX + 6*8 +: 8] = 8'b10000000;
+            scan_chain[SCAN_MEM0_INDEX + 7*8 +: 8] = 8'b10001111;
+            scan_chain[SCAN_MEM0_INDEX + 8*8 +: 8] = 8'b10000001;
+            scan_chain[SCAN_MEM0_INDEX + 9*8 +: 8] = 8'b00011110;
+            scan_chain[SCAN_MEM0_INDEX + 10*8 +: 8] = 8'b11001010;
+            scan_chain[SCAN_MEM0_INDEX + 11*8 +: 8] = 8'b11111111;
+            scan_chain[SCAN_MEM0_INDEX + 15*8 +: 8] = 8'b00010000;
 
-        scan_chain[SCAN_MEM0_INDEX + 0*8 +: 8] = 8'b00001111;
-        scan_chain[SCAN_MEM0_INDEX + 1*8 +: 8] = 8'b11000011;
-        scan_chain[SCAN_MEM0_INDEX + 2*8 +: 8] = 8'b11111100;
-        scan_chain[SCAN_MEM0_INDEX + 3*8 +: 8] = 8'b00011111;
-        scan_chain[SCAN_MEM0_INDEX + 4*8 +: 8] = 8'b11011010;
-        scan_chain[SCAN_MEM0_INDEX + 5*8 +: 8] = 8'b10011111;
-        scan_chain[SCAN_MEM0_INDEX + 6*8 +: 8] = 8'b10000000;
-        scan_chain[SCAN_MEM0_INDEX + 7*8 +: 8] = 8'b10001111;
-        scan_chain[SCAN_MEM0_INDEX + 8*8 +: 8] = 8'b10000001;
-        scan_chain[SCAN_MEM0_INDEX + 9*8 +: 8] = 8'b00011110;
-        scan_chain[SCAN_MEM0_INDEX + 10*8 +: 8] = 8'b11001010;
-        scan_chain[SCAN_MEM0_INDEX + 11*8 +: 8] = 8'b11111111;
-        scan_chain[SCAN_MEM0_INDEX + 15*8 +: 8] = 8'b00010000;
+            
+            //RESET PROCESSOR
+            scan_enable_in = 0;
+            proc_en_in = 0;
+            scan_in = 0;
+            reset_processor;
+            //SCAN
+            xchg_scan_chain;
+            //RUN PROCESSOR UNTIL HALT
+            run_processor_until_halt(256, i);
+            if(halt_out != 1) begin
+                $display("Program failed to halt, halt_out=%b", halt_out);
+                $finish;
+            end
+            $display("Program halted after %d clock cycles", i);
+            //SCAN OUT
+            xchg_scan_chain;
 
-        
-        //RESET PROCESSOR
-        scan_enable_in = 0;
-        proc_en_in = 0;
-        scan_in = 0;
-        reset_processor;
-        //SCAN
-        xchg_scan_chain;
-        //RUN PROCESSOR UNTIL HALT
-        run_processor_until_halt(256, i);
-        if(halt_out != 1) begin
-            $display("Program failed to halt, halt_out=%b", halt_out);
-            $finish;
+            if(scan_chain[SCAN_MEM0_INDEX + 15*8 +: 8] !== 8'h0) begin
+                $display("MEM[15] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 14*8 +: 8] !== 8'h1) begin
+                $display("MEM[14] wrong value %d", scan_chain[24+16*8 -: 8]);
+                $finish;
+            end
+            $display("Memory values correct after scanout");
         end
-        $display("Program halted after %d clock cycles", i);
-        //SCAN OUT
-        xchg_scan_chain;
+        if(DO_TEST_2) begin
 
-        if(scan_chain[SCAN_MEM0_INDEX + 15*8 +: 8] !== 8'h0) begin
-            $display("MEM[15] wrong value");
-            $finish;
-        end
-        if(scan_chain[SCAN_MEM0_INDEX + 14*8 +: 8] !== 8'h1) begin
-            $display("MEM[14] wrong value %d", scan_chain[24+16*8 -: 8]);
-            $finish;
-        end
-        $display("Memory values correct after scanout");
+            $display("TEST 2 - test_2.asm");
+            scan_chain = 'b0;
+            scan_chain[SCAN_CU_INDEX +: 3] = 3'b001; //state = fetch
+            scan_chain[SCAN_SEG_INDEX +: 4] = 4'b0000; //SEG = 0
+            scan_chain[SCAN_PC_INDEX +: 8] = 8'h00;    //PC = 00
+            scan_chain[SCAN_IR_INDEX +: 8] = 8'h00; //IR = 0x00
+            scan_chain[SCAN_ACC_INDEX +: 8] = 8'h00; //ACC = 0x00
+            scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] = 8'hFF; //SEGEXE_L = 0xFF
+            scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] = 8'h00; //SEGEXE_H = 0x00
+            scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] = 8'h00; //IO_IN = 0x00
+            scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] = 8'h00; //IO_OUT = 0x00
+            scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] = 8'h00; //CNT_L = 0x00
+            scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] = 8'h00; //CNT_H = 0x00
+            scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] = 8'h00; //STATUS_CTRL = 0x00
+            scan_chain[SCAN_CSR_TEMP_INDEX +: 8] = 8'h00; //TEMP = 0x00
 
-        /*
+            scan_chain[SCAN_MEM0_INDEX + 0*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 1*8 +: 8] = 8'b10000101;
+            scan_chain[SCAN_MEM0_INDEX + 2*8 +: 8] = 8'b11110001;
+            scan_chain[SCAN_MEM0_INDEX + 3*8 +: 8] = 8'b11111111;
+            scan_chain[SCAN_MEM0_INDEX + 4*8 +: 8] = 8'b00001010;
+            scan_chain[SCAN_MEM0_INDEX + 5*8 +: 8] = 8'b00010000;
+            scan_chain[SCAN_MEM0_INDEX + 6*8 +: 8] = 8'b00000100;
+            scan_chain[SCAN_MEM0_INDEX + 7*8 +: 8] = 8'b11010011;
+            scan_chain[SCAN_MEM0_INDEX + 9*8 +: 8] = 8'b11110000;
+            scan_chain[SCAN_MEM0_INDEX + 10*8 +: 8] = 8'b11111100;
+            scan_chain[SCAN_MEM0_INDEX + 11*8 +: 8] = 8'b00010100;
+            scan_chain[SCAN_MEM0_INDEX + 12*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 13*8 +: 8] = 8'b10000110;
+            scan_chain[SCAN_MEM0_INDEX + 14*8 +: 8] = 8'b11110000;
 
-        $display("TEST 3");
 
-        scan_chain[2:0] = 3'b001;  //state = fetch
-        scan_chain[7:3] = 5'h0;    //PC = 0
-        scan_chain[15:8] = 8'h00; //IR = 0
-        scan_chain[23:16] = 8'h00; //ACC = 0x00
-        scan_chain[31 -: 8] = 8'b00010000;
-        scan_chain[39 -: 8] = 8'b11100001;
-        scan_chain[47 -: 8] = 8'b00100000;
-        scan_chain[55 -: 8] = 8'b01010000;
-        scan_chain[63 -: 8] = 8'b00100001;
-        scan_chain[71 -: 8] = 8'b01110000;
-        scan_chain[79 -: 8] = 8'b00100010;
-        scan_chain[87 -: 8] = 8'b10001111;
-        scan_chain[95 -: 8] = 8'b00100011;
-        scan_chain[103 -: 8] = 8'b10101110;
-        scan_chain[111 -: 8] = 8'b00100100;
-        scan_chain[119 -: 8] = 8'b11001101;
-        scan_chain[127 -: 8] = 8'b00100101;
-        scan_chain[135 -: 8] = 8'b11111111;
-        scan_chain[143 -: 8] = 8'b00000100;
-        scan_chain[151 -: 8] = 8'b00001111;
-        scan_chain[159 -: 8] = 8'b00001010;
-        scan_chain[199 -: 16] = 16'hd5ce;
+            //RESET PROCESSOR
+            scan_enable_in = 0;
+            proc_en_in = 0;
+            scan_in = 0;
+            reset_processor;
+            //SCAN
+            xchg_scan_chain;
+            //RUN PROCESSOR UNTIL HALT
+            run_processor_until_halt(256, i);
+            if(halt_out != 1) begin
+                $display("Program failed to halt, halt_out=%b", halt_out);
+                $finish;
+            end
+            $display("Program halted after %d clock cycles", i);
+            //SCAN OUT
+            xchg_scan_chain;
 
-        //RESET PROCESSOR
-        scan_enable_in = 0;
-        proc_en_in = 0;
-        scan_in = 0;
-        reset_processor;
-        //SCAN
-        xchg_scan_chain;
-        //RUN PROCESSOR UNTIL HALT
-        run_processor_until_halt(256, i);
-        if(scan_out != 1) begin
-            $display("Program failed to halt");
-            $finish;
-        end
-        $display("Program halted after %d clock cycles", i);
-        //SCAN OUT
-        xchg_scan_chain;
+            if(scan_chain[SCAN_MEM0_INDEX + 3*8 +: 8] !== 8'hFF) begin
+                $display("MEM[3] wrong value");
+                $finish;
+            end
 
-        if(scan_chain[31+8*0 -: 8] !== 11) begin
-            $display("MEM[0] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*1 -: 8] !== 21) begin
-            $display("MEM[1] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*2 -: 8] !== 11) begin
-            $display("MEM[2] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*3 -: 8] !== 11) begin
-            $display("MEM[3] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*4 -: 8] !== 15) begin
-            $display("MEM[4] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*5 -: 8] !== 8'hf0) begin
-            $display("MEM[5] wrong value");
-            $finish;
-        end
-        $display("Memory values correct after scanout");
+            if(scan_chain[SCAN_MEM0_INDEX + 4*8 +: 8] !== 8'h00) begin
+                $display("MEM[4] wrong value");
+                $finish;
+            end
 
-        $display("TEST 4");
+            $display("Memory values correct after scanout");
+        end
+
+        if(DO_TEST_3) begin
+            $display("TEST 3 - test_3.asm");
+
+            scan_chain = 'b0;
+            scan_chain[SCAN_CU_INDEX +: 3] = 3'b001; //state = fetch
+            scan_chain[SCAN_SEG_INDEX +: 4] = 4'b0000; //SEG = 0
+            scan_chain[SCAN_PC_INDEX +: 8] = 8'h00;    //PC = 00
+            scan_chain[SCAN_IR_INDEX +: 8] = 8'h00; //IR = 0x00
+            scan_chain[SCAN_ACC_INDEX +: 8] = 8'h00; //ACC = 0x00
+            scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] = 8'hFF; //SEGEXE_L = 0xFF
+            scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] = 8'h00; //SEGEXE_H = 0x00
+            scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] = 8'h00; //IO_IN = 0x00
+            scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] = 8'h00; //IO_OUT = 0x00
+            scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] = 8'h00; //CNT_L = 0x00
+            scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] = 8'h00; //CNT_H = 0x00
+            scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] = 8'h00; //STATUS_CTRL = 0x00
+            scan_chain[SCAN_CSR_TEMP_INDEX +: 8] = 8'h00; //TEMP = 0x00
+
+            scan_chain[SCAN_MEM0_INDEX + 0*8 +: 8] = 8'b00001111;
+            scan_chain[SCAN_MEM0_INDEX + 1*8 +: 8] = 8'b10000001;
+            scan_chain[SCAN_MEM0_INDEX + 2*8 +: 8] = 8'b00010000;
+            scan_chain[SCAN_MEM0_INDEX + 3*8 +: 8] = 8'b00101111;
+            scan_chain[SCAN_MEM0_INDEX + 4*8 +: 8] = 8'b00010001;
+            scan_chain[SCAN_MEM0_INDEX + 5*8 +: 8] = 8'b00111101;
+            scan_chain[SCAN_MEM0_INDEX + 6*8 +: 8] = 8'b00010010;
+            scan_chain[SCAN_MEM0_INDEX + 7*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 8*8 +: 8] = 8'b10100001;
+            scan_chain[SCAN_MEM0_INDEX + 9*8 +: 8] = 8'b10010001;
+            scan_chain[SCAN_MEM0_INDEX + 10*8 +: 8] = 8'b11110000;
+            scan_chain[SCAN_MEM0_INDEX + 13*8 +: 8] = 8'b00000100;
+            scan_chain[SCAN_MEM0_INDEX + 14*8 +: 8] = 8'b00001111;
+            scan_chain[SCAN_MEM0_INDEX + 15*8 +: 8] = 8'b00001010;
+            scan_chain[SCAN_MEM0_INDEX + 16*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 17*8 +: 8] = 8'b10000001;
+            scan_chain[SCAN_MEM0_INDEX + 18*8 +: 8] = 8'b00010000;
+            scan_chain[SCAN_MEM0_INDEX + 19*8 +: 8] = 8'b10100000;
+            scan_chain[SCAN_MEM0_INDEX + 20*8 +: 8] = 8'b00000010;
+            scan_chain[SCAN_MEM0_INDEX + 21*8 +: 8] = 8'b01001110;
+            scan_chain[SCAN_MEM0_INDEX + 22*8 +: 8] = 8'b00010011;
+            scan_chain[SCAN_MEM0_INDEX + 23*8 +: 8] = 8'b10100001;
+            scan_chain[SCAN_MEM0_INDEX + 24*8 +: 8] = 8'b01011110;
+            scan_chain[SCAN_MEM0_INDEX + 25*8 +: 8] = 8'b00010001;
+            scan_chain[SCAN_MEM0_INDEX + 26*8 +: 8] = 8'b01101101;
+            scan_chain[SCAN_MEM0_INDEX + 27*8 +: 8] = 8'b00010010;
+            scan_chain[SCAN_MEM0_INDEX + 28*8 +: 8] = 8'b11111111;
+            scan_chain[SCAN_MEM0_INDEX + 29*8 +: 8] = 8'b11111111;
+            scan_chain[SCAN_MEM0_INDEX + 30*8 +: 8] = 8'b00001110;
+
+
+
+            //RESET PROCESSOR
+            scan_enable_in = 0;
+            proc_en_in = 0;
+            scan_in = 0;
+            reset_processor;
+            //SCAN
+            xchg_scan_chain;
+            //RUN PROCESSOR UNTIL HALT
+            run_processor_until_halt(256, i);
+            if(halt_out != 1) begin
+                $display("Program failed to halt");
+                $finish;
+            end
+            $display("Program halted after %d clock cycles", i);
+            //SCAN OUT
+            xchg_scan_chain;
+
+            if(scan_chain[SCAN_MEM0_INDEX + 0*8 +: 8] !== 11) begin
+                $display("MEM[0] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 1*8 +: 8] !== 21) begin
+                $display("MEM[1] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 2*8 +: 8] !== 17) begin
+                $display("MEM[2] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 16*8 +: 8] !== 1) begin
+                $display("MEM[16] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 3*8 +: 8] !== 1) begin
+                $display("MEM[3] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 17*8 +: 8] !== 15) begin
+                $display("MEM[17] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 18*8 +: 8] !== 8'hf0) begin
+                $display("MEM[18] wrong value");
+                $finish;
+            end
+            $display("Memory values correct after scanout");
+        end
+
+        /*$display("TEST 4");
 
         scan_chain[2:0] = 3'b001;  //state = fetch
         scan_chain[7:3] = 5'h0;    //PC = 0

@@ -192,6 +192,15 @@ always @(*) begin
         default: ; // Do nothing for other opcodes
       endcase
 
+      // Fixed Control and Branching Instructions
+      case (instruction[7:0])
+        8'b11110001: begin // JSR
+          ACC_write_enable = 1'b1;
+          ACC_mux_select = 2'b10; // PC + 1
+        end
+        default: ; // Do nothing for other opcodes
+      endcase
+
       // Data Manipulation Instructions
       case (instruction[7:0])
         8'b11110110, // SHL
@@ -384,7 +393,7 @@ always @(*) begin
                 4'b1000: alu_opcode = 4'b1000;    // ROL
                 4'b1001: alu_opcode = 4'b1001;    // ROR
                 4'b1100: alu_opcode = 4'b1010;    // DEC
-                4'b1101: alu_opcode = 4'b0000;    // CLR
+                4'b1101: alu_opcode = 4'b1100;    // CLR
                 4'b1110: alu_opcode = 4'b1011;    // INV
                 default: alu_opcode = 4'b0000;
             endcase
