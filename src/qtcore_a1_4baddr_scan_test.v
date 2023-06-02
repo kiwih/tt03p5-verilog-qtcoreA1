@@ -34,9 +34,10 @@ module qtcore_a1_4baddr_scan_test (
     localparam SCAN_MEM0_INDEX = 96;
 
     localparam DO_TEST_0 = 1;
-    localparam DO_TEST_1 = 1;
-    localparam DO_TEST_2 = 1;
-    localparam DO_TEST_3 = 1;
+    localparam DO_TEST_1 = 0;
+    localparam DO_TEST_2 = 0;
+    localparam DO_TEST_3 = 0;
+    localparam DO_TEST_4 = 1;
 
     reg [7:0] io_in;
     wire [7:0] io_out;
@@ -119,6 +120,7 @@ module qtcore_a1_4baddr_scan_test (
         $dumpfile("qtcore_a1_4baddr_scan_test.vcd");
         $dumpvars(0, qtcore_a1_4baddr_scan_test);
         scan_chain = 'b0;
+        io_in = 'b0;
         `ifdef SCAN_ONLY
             $display("SCAN ONLY");
         `endif
@@ -408,6 +410,7 @@ module qtcore_a1_4baddr_scan_test (
             end
             $display("Memory values correct after scanout");
         end
+
         if(DO_TEST_2) begin
 
             $display("TEST 2 - test_2.asm");
@@ -568,6 +571,81 @@ module qtcore_a1_4baddr_scan_test (
                 $finish;
             end
             $display("Memory values correct after scanout");
+        end
+
+        if(DO_TEST_4) begin
+            $display("TEST 4 - test_4.asm (Includes I/O, CSR, memory protect)");
+            io_in = 8'h12;
+
+            scan_chain = 'b0;
+            scan_chain[SCAN_CU_INDEX +: 3] = 3'b001; //state = fetch
+            scan_chain[SCAN_SEG_INDEX +: 4] = 4'b0000; //SEG = 0
+            scan_chain[SCAN_PC_INDEX +: 8] = 8'h00;    //PC = 00
+            scan_chain[SCAN_IR_INDEX +: 8] = 8'h00; //IR = 0x00
+            scan_chain[SCAN_ACC_INDEX +: 8] = 8'h00; //ACC = 0x00
+            scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] = 8'hFF; //SEGEXE_L = 0xFF
+            scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] = 8'h00; //SEGEXE_H = 0x00
+            scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] = 8'h00; //IO_IN = 0x00
+            scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] = 8'h00; //IO_OUT = 0x00
+            scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] = 8'h00; //CNT_L = 0x00
+            scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] = 8'h00; //CNT_H = 0x00
+            scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] = 8'h00; //STATUS_CTRL = 0x00
+            scan_chain[SCAN_CSR_TEMP_INDEX +: 8] = 8'h00; //TEMP = 0x00
+
+            scan_chain[SCAN_MEM0_INDEX + 0*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 1*8 +: 8] = 8'b10101111;
+            scan_chain[SCAN_MEM0_INDEX + 3*8 +: 8] = 8'b10111011;
+            scan_chain[SCAN_MEM0_INDEX + 4*8 +: 8] = 8'b10110010;
+            scan_chain[SCAN_MEM0_INDEX + 5*8 +: 8] = 8'b00010000;
+            scan_chain[SCAN_MEM0_INDEX + 6*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 7*8 +: 8] = 8'b10001111;
+            scan_chain[SCAN_MEM0_INDEX + 8*8 +: 8] = 8'b10111000;
+            scan_chain[SCAN_MEM0_INDEX + 9*8 +: 8] = 8'b10111001;
+            scan_chain[SCAN_MEM0_INDEX + 10*8 +: 8] = 8'b10010011;
+            scan_chain[SCAN_MEM0_INDEX + 11*8 +: 8] = 8'b11110000;
+            scan_chain[SCAN_MEM0_INDEX + 48*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 49*8 +: 8] = 8'b10011111;
+            scan_chain[SCAN_MEM0_INDEX + 50*8 +: 8] = 8'b10000001;
+            scan_chain[SCAN_MEM0_INDEX + 51*8 +: 8] = 8'b00011111;
+            scan_chain[SCAN_MEM0_INDEX + 52*8 +: 8] = 8'b11110000;
+            scan_chain[SCAN_MEM0_INDEX + 240*8 +: 8] = 8'b00001111;
+            scan_chain[SCAN_MEM0_INDEX + 241*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 242*8 +: 8] = 8'b11110000;
+
+
+
+
+            //RESET PROCESSOR
+            scan_enable_in = 0;
+            proc_en_in = 0;
+            scan_in = 0;
+            reset_processor;
+            //SCAN
+            xchg_scan_chain;
+            //RUN PROCESSOR UNTIL HALT
+            run_processor_until_halt(256, i);
+            if(halt_out != 1) begin
+                $display("Program failed to halt");
+                $finish;
+            end
+            $display("Program halted after %d clock cycles", i);
+            //CHECK IO_OUT BEFORE SCAN_OUT (it will mess it up)
+            if(io_out !== 15) begin //io_out = 15
+                $display("IO_OUT wrong value (%b)", io_out);
+                $finish;
+            end
+            //SCAN OUT
+            xchg_scan_chain;
+
+            if(scan_chain[SCAN_MEM0_INDEX + 240*8 +: 8] !== io_in) begin
+                $display("MEM[240] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 255*8 +: 8] !== 8'hf1) begin
+                $display("MEM[255] wrong value (%b)", scan_chain[SCAN_MEM0_INDEX + 255*8 +: 8]);
+                $finish;
+            end
+            $display("IO_OUT correct and memory values correct after scanout");
         end
 
         /*$display("TEST 4");

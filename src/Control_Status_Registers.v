@@ -7,6 +7,7 @@ module Control_Status_Registers #(
     input wire [WIDTH-1:0] data_in,
     input wire wr_enable,
     input wire [WIDTH-1:0] IO_IN,
+    input wire processor_enable,
     input wire scan_enable,
     input wire scan_in,
     output wire [WIDTH-1:0] data_out,
@@ -60,7 +61,7 @@ module Control_Status_Registers #(
   shift_register #(.WIDTH(WIDTH)) io_in_reg (
     .clk(clk),
     .rst(rst),
-    .enable(1'b1),  // Enable is permanently set to true for IO_IN register
+    .enable(processor_enable),  // Enable controlled by processor_enable
     .data_in(IO_IN),  // Data input is IO_IN
     .data_out(io_in_data),
     .scan_enable(scan_enable),

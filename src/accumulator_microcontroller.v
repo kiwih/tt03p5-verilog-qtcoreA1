@@ -227,19 +227,21 @@ Control_Status_Registers #(
 ) csr_inst (
     .clk(clk),
     .rst(rst),
-    .addr(CSR_addr),                 // Connect CSR_addr to the bottom 3 bits of IR
-    .data_in(ACC),                   // Connect data_in to ACC
-    .wr_enable(CSR_write_enable),    // Connect wr_enable to CSR_write_enable
-    .IO_IN(IO_in),                   // Connect IO_in to IO_IN
+    .addr(CSR_addr),                   // Connect CSR_addr to the bottom 3 bits of IR
+    .data_in(ACC),                     // Connect data_in to ACC
+    .wr_enable(CSR_write_enable),      // Connect wr_enable to CSR_write_enable
+    .IO_IN(IO_in),                     // Connect IO_in to IO_IN
     .scan_enable(scan_enable),
-    .scan_in(scan_in_CSR),           // Renamed scan_in signal as scan_in_CSR
-    .scan_out(scan_out_CSR),         // Renamed scan_out signal as scan_out_CSR
-    .data_out(CSR_data_out),         // Connect data_out to CSR_data_out
-    .SEGEXE_L_OUT(SEGEXE_L_OUT),     // Connect SEGEXE_L_OUT to new wire
-    .SEGEXE_H_OUT(SEGEXE_H_OUT),     // Connect SEGEXE_H_OUT to new wire
-    .IO_OUT(IO_out),                 // Connect IO_out to IO_OUT
-    .INT_OUT(INT_out)
+    .scan_in(scan_in_CSR),             // Renamed scan_in signal as scan_in_CSR
+    .scan_out(scan_out_CSR),           // Renamed scan_out signal as scan_out_CSR
+    .data_out(CSR_data_out),           // Connect data_out to CSR_data_out
+    .SEGEXE_L_OUT(SEGEXE_L_OUT),       // Connect SEGEXE_L_OUT to new wire
+    .SEGEXE_H_OUT(SEGEXE_H_OUT),       // Connect SEGEXE_H_OUT to new wire
+    .IO_OUT(IO_out),                   // Connect IO_out to IO_OUT
+    .INT_OUT(INT_out),
+    .processor_enable(proc_en)         // Connect processor_enable to top-level proc_en
 );
+
 
 assign scan_in_CU = scan_in;           // Input to Control Unit (CU)
 assign scan_in_SEG = scan_out_CU;      // Input to SEG register
@@ -252,5 +254,42 @@ assign scan_out = scan_out_memory;     // Output of memory bank (final scan chai
 
 assign ZF = (ACC == 8'b00000000);  // Set ZF to 1 when ACC is 0, otherwise 0
 
+// Extracting the segment address from the upper 4 bits of PC
+wire [3:0] seg_addr;
+assign seg_addr = PC[7:4];
+
+// Instantiating the SegmentCheck module
+SegmentCheck Segment_Check (
+    .seg_addr(seg_addr),
+    .SEGEXE_H(SEGEXE_H_OUT),
+    .SEGEXE_L(SEGEXE_L_OUT),
+    .illegal_segment_address(illegal_segment_execution)
+);
+
+
 endmodule
+
+module SegmentCheck(
+  input wire [3:0] seg_addr,
+  input wire [7:0] SEGEXE_H,
+  input wire [7:0] SEGEXE_L,
+  output reg illegal_segment_address
+);
+  
+  always @(*) begin
+    if (seg_addr < 8) begin
+      illegal_segment_address = SEGEXE_L[seg_addr] == 1'b0;
+    end
+    else if (seg_addr < 16) begin
+      illegal_segment_address = SEGEXE_H[seg_addr-8] == 1'b0;
+    end
+    else begin
+      illegal_segment_address = 1'b1;  // By default, indicate illegal if out of 16
+    end
+  end
+
+endmodule
+
+
+
 `default_nettype wire

@@ -364,6 +364,24 @@ always @(*) begin
   end
 end
 
+always @(*) begin
+  // Default values
+  CSR_write_enable = 1'b0;
+
+  // Check if the processor is enabled
+  if (processor_enable) begin
+    // Check if the current state is EXECUTE
+    if (state_out == STATE_EXECUTE) begin
+      // CSR Manipulation Instructions
+      case (instruction[7:3])
+        5'b10111: begin // CSW
+          CSR_write_enable = 1'b1;
+        end
+        default: ; // Do nothing for other opcodes
+      endcase
+    end
+  end
+end
 
 
 endmodule

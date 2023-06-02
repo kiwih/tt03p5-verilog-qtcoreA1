@@ -57,10 +57,13 @@ def assemble(program):
                         opcode += '1' + format(abs(operand), '03b')
                     else:
                         opcode += '0' + format(operand, '03b')
+                elif mnemonic in ['CSR', 'CSW']:
+                    opcode += format(int(parts[1]), '03b')
                 else:
                     opcode += format(int(parts[1]), '04b')
             assembled[address] = int(opcode, 2)
     return assembled
+
 
 
 
@@ -127,7 +130,7 @@ with open(sys.argv[1].replace('.asm', '.caravel.c'), 'w') as f:
     # f.write('\t0b, //STATUS_CTRL\n')
     # f.write('\t0b, //CNT_H\n')
     # f.write('\t0b, //CNT_L\n')
-    f.write('\t0b00000000000000000000000000000000, //IO_OUT, IO_IN, SEG_EXE_H, SEG_EXE_L\n')
+    f.write('\t0b00000000000000000000000011111111, //IO_OUT, IO_IN, SEG_EXE_H, SEG_EXE_L\n')
     # f.write('\t0b, //IO_IN\n')
     # f.write('\t0b, //SEG_EXE_H\n')
     # f.write('\t0b, //SEG_EXE_L\n')
