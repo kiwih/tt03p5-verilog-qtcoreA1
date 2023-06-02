@@ -126,9 +126,8 @@ wire [2:0] IMM3 = IR[2:0];
 wire [7:0] PC_input;
 assign PC_input = (PC_mux_select == 2'b00) ? PC + 8'b00000001 :   // PC + 1 for FETCH cycle
                   (PC_mux_select == 2'b01) ? ACC :                // ACC for JMP and JSR
-                  (PC_mux_select == 2'b10) ? PC + {5'b0, IMM3} :  // PC + IMM for forward branches
-                  PC - {5'b0, IMM3};                              // PC - IMM for backward branches
-
+                  (PC_mux_select == 2'b10) ? PC + {5'b0, IMM3} - 1 :  // PC + IMM - 1 for forward branches
+                  PC - {5'b0, IMM3} - 1;                              // PC - IMM - 1 for backward branches
 
 // PC register instantiation
 shift_register #(
@@ -251,6 +250,7 @@ assign scan_in_CSR = scan_out_ACC;     // Input to CSR module
 assign scan_in_memory = scan_out_CSR;  // Input to memory bank
 assign scan_out = scan_out_memory;     // Output of memory bank (final scan chain output)
 
+assign ZF = (ACC == 8'b00000000);  // Set ZF to 1 when ACC is 0, otherwise 0
 
 endmodule
 `default_nettype wire

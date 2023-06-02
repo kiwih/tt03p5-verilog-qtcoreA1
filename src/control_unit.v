@@ -56,6 +56,25 @@ module control_unit (
   // Instantiate shift register for state storage (one-hot encoding)
   reg [2:0] state_in;
   wire [2:0] state_out;
+  // Instantiate shift register for new 'reserved' connection (one-bit)
+  reg reserved_in = 1'b0;        // Permanently setting to 0
+  wire reserved_scan_out;        // New wire to connect scan_out of reserved_register to scan_in of state_register
+  shift_register #(
+    .WIDTH(1)
+  ) reserved_register (
+    .clk(clk),
+    .rst(rst),
+    .enable(1'b0),             // Permanently setting enable to 0
+    .data_in(reserved_in),
+    .data_out(),               // Not used
+    .scan_enable(scan_enable),
+    .scan_in(scan_in),      // Taking top-level scan_in
+    .scan_out(reserved_scan_out) // Connecting to new wire reserved_scan_out
+  );
+
+  // Then, connect this output to your existing state_register's scan_in:
+
+  // Instantiate shift register for state storage (one-hot encoding)
   shift_register #(
     .WIDTH(3)
   ) state_register (
@@ -65,9 +84,10 @@ module control_unit (
     .data_in(state_in),
     .data_out(state_out),
     .scan_enable(scan_enable),
-    .scan_in(scan_in),
-    .scan_out(scan_out)
+    .scan_in(reserved_scan_out), // Now connected to new wire from reserved register's scan_out
+    .scan_out(scan_out)     // Output connected to top-level scan_out
   );
+
 
 always @(*) begin
   // Default state: stay in the current state
@@ -137,49 +157,51 @@ always @(*) begin
   if (processor_enable) begin
     // Check if the current state is EXECUTE
     if (state_out == STATE_EXECUTE) begin
-      // Immediate Data Manipulation Instructions
+      // Handle instructions where ACC is written with ALU output
       case (instruction[7:4])
-        4'b1000: begin // ADDI
+        4'b0010, // ADD
+        4'b0011, // SUB
+        4'b0100, // AND
+        4'b0101, // OR
+        4'b0110, // XOR
+        4'b1000, // ADDI
+        4'b1001: // LUI
+        begin
           ACC_write_enable = 1'b1;
           ACC_mux_select = 2'b00; // ALU output
         end
-        4'b1001: begin // LUI
+        default: ; // Do nothing for other opcodes
+      endcase
+      
+      // Handle instructions where ACC is written with memory contents
+      case (instruction[7:4])
+        4'b0000: // LDA
+        begin
           ACC_write_enable = 1'b1;
-          ACC_mux_select = 2'b00; // ALU output
-        end
-        4'b1010: begin // SETSEG
-          ACC_write_enable = 1'b0; // ACC is not affected
+          ACC_mux_select = 2'b01; // Memory contents
         end
         default: ; // Do nothing for other opcodes
       endcase
 
       // Control/Status Register Manipulation Instructions
-      case (instruction[7:0])
-        8'b10110000: begin // CSR
+      case (instruction[7:3])
+        5'b10110: begin // CSR
           ACC_write_enable = 1'b1;
           ACC_mux_select = 2'b11; // CSR[RRR]
-        end
-        8'b10111000: begin // CSW
-          ACC_write_enable = 1'b0; // ACC is not affected
         end
         default: ; // Do nothing for other opcodes
       endcase
 
       // Data Manipulation Instructions
       case (instruction[7:0])
-        8'b11110110: begin // SHL
-          ACC_write_enable = 1'b1;
-          ACC_mux_select = 2'b00; // ALU output
-        end
-        8'b11110111: begin // SHR
-          ACC_write_enable = 1'b1;
-          ACC_mux_select = 2'b00; // ALU output
-        end
-        8'b11111000: begin // ROL
-          ACC_write_enable = 1'b1;
-          ACC_mux_select = 2'b00; // ALU output
-        end
-        8'b11111001: begin // ROR
+        8'b11110110, // SHL
+        8'b11110111, // SHR
+        8'b11111000, // ROL
+        8'b11111001, // ROR
+        8'b11111100, // DEC
+        8'b11111101, // CLR
+        8'b11111110: // INV
+        begin
           ACC_write_enable = 1'b1;
           ACC_mux_select = 2'b00; // ALU output
         end
@@ -187,26 +209,12 @@ always @(*) begin
           ACC_write_enable = 1'b1;
           ACC_mux_select = 2'b01; // Memory contents
         end
-        8'b11111011: begin // SETSEG_ACC
-          ACC_write_enable = 1'b0; // ACC is not affected
-        end
-        8'b11111100: begin // DEC
-          ACC_write_enable = 1'b1;
-          ACC_mux_select = 2'b00; // ALU output
-        end
-        8'b11111101: begin // CLR
-          ACC_write_enable = 1'b1;
-          ACC_mux_select = 2'b00; // ALU output
-        end
-        8'b11111110: begin // INV
-          ACC_write_enable = 1'b1;
-          ACC_mux_select = 2'b00; // ALU output
-        end
         default: ; // Do nothing for other opcodes
       endcase
     end
   end
 end
+
 
 
 always @(*) begin
@@ -241,12 +249,12 @@ always @(*) begin
             if (instruction == 8'b11111010) begin
                 Memory_address_mux_select = 2'b01;
             end
+        end
         // Instruction fetch cycle uses PC as memory address
         else if (state_out == STATE_FETCH) begin
             Memory_address_mux_select = 2'b10; 
         end
     end
-end
 end
 
 always @(*) begin
@@ -277,6 +285,77 @@ instruction_decoder decoder (
     .instruction(instruction),
     .alu_opcode(ALU_opcode)
 );
+
+always @(*) begin
+  // Default values
+  PC_write_enable = 1'b0;
+  PC_mux_select = 2'b00;
+
+  // Only emit signals if the control unit is enabled
+  if (processor_enable) begin
+    if (state_out == STATE_FETCH) begin
+      // Increment the PC by 1 during FETCH
+      PC_write_enable = 1'b1;
+      PC_mux_select = 2'b00; // PC + 1
+    end
+
+    else if (state_out == STATE_EXECUTE) begin
+      // Control Flow Instructions
+      case (instruction[7:0])
+        8'b11110000: begin // JMP
+          PC_write_enable = 1'b1;
+          PC_mux_select = 2'b01; // ACC
+        end
+        8'b11110001: begin // JSR
+          PC_write_enable = 1'b1;
+          PC_mux_select = 2'b01; // ACC
+        end
+        default: ; // Do nothing for other opcodes
+      endcase
+      
+      case (instruction[7:4])
+        4'b1100: begin // BEQ
+          if (ZF) begin
+            PC_write_enable = 1'b1;
+            PC_mux_select = instruction[3] ? 2'b11 : 2'b10; // PC + Immediate if sign is 0, PC - Immediate if sign is 1
+          end
+        end
+        4'b1101: begin // BNE
+          if (!ZF) begin
+            PC_write_enable = 1'b1;
+            PC_mux_select = instruction[3] ? 2'b11 : 2'b10; // PC + Immediate if sign is 0, PC - Immediate if sign is 1
+          end
+        end
+        4'b1110: begin // BRA
+          PC_write_enable = 1'b1;
+          PC_mux_select = instruction[3] ? 2'b11 : 2'b10; // PC + Immediate if sign is 0, PC - Immediate if sign is 1
+        end
+        default: ; // Do nothing for other opcodes
+      endcase
+    end
+  end
+end
+
+always @(*) begin
+  // Default value
+  ALU_inputB_mux_select = 1'b0; // Memory contents by default
+
+  // Only emit signals if the control unit is enabled
+  if (processor_enable && state_out == STATE_EXECUTE) begin
+    // ALU Instructions
+    case (instruction[7:4])
+      4'b1000: begin // ADDI
+        ALU_inputB_mux_select = 1'b1; // Immediate value
+      end
+      4'b1001: begin // LUI
+        ALU_inputB_mux_select = 1'b1; // Immediate value
+      end
+      default: ; // Do nothing for other opcodes
+    endcase
+  end
+end
+
+
 
 endmodule
 
