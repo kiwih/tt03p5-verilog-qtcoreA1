@@ -22,11 +22,14 @@
 20: LDA 2     ; load from M[0+2] which is 17
 21: AND 14    ; AND M[0+14](0xF) to 17(0b10001), should become 0b0001
 22: STA 3      ; set M[0+3 = 3] to 1
-23: SETSEG 1    
-24: OR 14        ; OR M[16+14](14) to 1, should become 15
-25: STA 1       ; set M[16+1 = 17] to 15
-26: XOR 13      ; XOR M[16+13](255) with 15, should become f0
-27: STA 2       ; set M[16+2 = 18] to f0
-28: HLT;
-29: DATA 255;
-30: DATA 14;
+23: SETSEG 2    ;
+24: BRA 2 ; skips to 26
+25: HLT
+26: OR 14        ; OR M[32+14 = 46](14) to 1, should become 15
+27: STA 1       ; set M[32+1 = 33] to 15
+28: XOR 13      ; XOR M[32+13 = 45](255) with 15, should become f0
+29: STA 2       ; set M[32+2 = 34] to f0
+30: HLT;
+
+45: DATA 255;
+46: DATA 14;

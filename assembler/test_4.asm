@@ -3,6 +3,7 @@
 ; check output: program halted
 ; check output: IO_OUT = 15
 ; check output: M[240] = IO_IN
+; check output: M[254] = 0b11111101
 ; check output: M[255] = 0xf1
 0: CLR
 1: SETSEG 15
@@ -14,8 +15,11 @@
 7: ADDI 15;
 8: CSW 0 ; sets SEGEXE_L to 0x0F, making just segments 0-3 executable
 9: CSW 1 ; sets SEGEXE_H to 0x0F, making just segments 8-11 executable
-10: LUI 3;
-11: JMP ; jumps to address 48
+10: CLR ;
+11: LDAR ; loads the value of M[0] = 0b11111101 into ACC
+12: STA 14; stores it in M[16*15 + 14 = 254]
+13: LUI 3;
+14: JMP ; jumps to address 48
 
 48: CLR ;
 49: LUI 15;

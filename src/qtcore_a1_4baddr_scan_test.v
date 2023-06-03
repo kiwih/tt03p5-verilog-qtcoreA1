@@ -34,9 +34,9 @@ module qtcore_a1_4baddr_scan_test (
     localparam SCAN_MEM0_INDEX = 96;
 
     localparam DO_TEST_0 = 1;
-    localparam DO_TEST_1 = 0;
-    localparam DO_TEST_2 = 0;
-    localparam DO_TEST_3 = 0;
+    localparam DO_TEST_1 = 1;
+    localparam DO_TEST_2 = 1;
+    localparam DO_TEST_3 = 1;
     localparam DO_TEST_4 = 1;
 
     reg [7:0] io_in;
@@ -514,14 +514,17 @@ module qtcore_a1_4baddr_scan_test (
             scan_chain[SCAN_MEM0_INDEX + 20*8 +: 8] = 8'b00000010;
             scan_chain[SCAN_MEM0_INDEX + 21*8 +: 8] = 8'b01001110;
             scan_chain[SCAN_MEM0_INDEX + 22*8 +: 8] = 8'b00010011;
-            scan_chain[SCAN_MEM0_INDEX + 23*8 +: 8] = 8'b10100001;
-            scan_chain[SCAN_MEM0_INDEX + 24*8 +: 8] = 8'b01011110;
-            scan_chain[SCAN_MEM0_INDEX + 25*8 +: 8] = 8'b00010001;
-            scan_chain[SCAN_MEM0_INDEX + 26*8 +: 8] = 8'b01101101;
-            scan_chain[SCAN_MEM0_INDEX + 27*8 +: 8] = 8'b00010010;
-            scan_chain[SCAN_MEM0_INDEX + 28*8 +: 8] = 8'b11111111;
-            scan_chain[SCAN_MEM0_INDEX + 29*8 +: 8] = 8'b11111111;
-            scan_chain[SCAN_MEM0_INDEX + 30*8 +: 8] = 8'b00001110;
+            scan_chain[SCAN_MEM0_INDEX + 23*8 +: 8] = 8'b10100010;
+            scan_chain[SCAN_MEM0_INDEX + 24*8 +: 8] = 8'b11100010;
+            scan_chain[SCAN_MEM0_INDEX + 25*8 +: 8] = 8'b11111111;
+            scan_chain[SCAN_MEM0_INDEX + 26*8 +: 8] = 8'b01011110;
+            scan_chain[SCAN_MEM0_INDEX + 27*8 +: 8] = 8'b00010001;
+            scan_chain[SCAN_MEM0_INDEX + 28*8 +: 8] = 8'b01101101;
+            scan_chain[SCAN_MEM0_INDEX + 29*8 +: 8] = 8'b00010010;
+            scan_chain[SCAN_MEM0_INDEX + 30*8 +: 8] = 8'b11111111;
+            scan_chain[SCAN_MEM0_INDEX + 45*8 +: 8] = 8'b11111111;
+            scan_chain[SCAN_MEM0_INDEX + 46*8 +: 8] = 8'b00001110;
+
 
 
 
@@ -562,12 +565,12 @@ module qtcore_a1_4baddr_scan_test (
                 $display("MEM[3] wrong value");
                 $finish;
             end
-            if(scan_chain[SCAN_MEM0_INDEX + 17*8 +: 8] !== 15) begin
-                $display("MEM[17] wrong value");
+            if(scan_chain[SCAN_MEM0_INDEX + 33*8 +: 8] !== 15) begin
+                $display("MEM[33] wrong value");
                 $finish;
             end
-            if(scan_chain[SCAN_MEM0_INDEX + 18*8 +: 8] !== 8'hf0) begin
-                $display("MEM[18] wrong value");
+            if(scan_chain[SCAN_MEM0_INDEX + 34*8 +: 8] !== 8'hf0) begin
+                $display("MEM[34] wrong value");
                 $finish;
             end
             $display("Memory values correct after scanout");
@@ -601,8 +604,11 @@ module qtcore_a1_4baddr_scan_test (
             scan_chain[SCAN_MEM0_INDEX + 7*8 +: 8] = 8'b10001111;
             scan_chain[SCAN_MEM0_INDEX + 8*8 +: 8] = 8'b10111000;
             scan_chain[SCAN_MEM0_INDEX + 9*8 +: 8] = 8'b10111001;
-            scan_chain[SCAN_MEM0_INDEX + 10*8 +: 8] = 8'b10010011;
-            scan_chain[SCAN_MEM0_INDEX + 11*8 +: 8] = 8'b11110000;
+            scan_chain[SCAN_MEM0_INDEX + 10*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 11*8 +: 8] = 8'b11111010;
+            scan_chain[SCAN_MEM0_INDEX + 12*8 +: 8] = 8'b00011110;
+            scan_chain[SCAN_MEM0_INDEX + 13*8 +: 8] = 8'b10010011;
+            scan_chain[SCAN_MEM0_INDEX + 14*8 +: 8] = 8'b11110000;
             scan_chain[SCAN_MEM0_INDEX + 48*8 +: 8] = 8'b11111101;
             scan_chain[SCAN_MEM0_INDEX + 49*8 +: 8] = 8'b10011111;
             scan_chain[SCAN_MEM0_INDEX + 50*8 +: 8] = 8'b10000001;
@@ -611,9 +617,6 @@ module qtcore_a1_4baddr_scan_test (
             scan_chain[SCAN_MEM0_INDEX + 240*8 +: 8] = 8'b00001111;
             scan_chain[SCAN_MEM0_INDEX + 241*8 +: 8] = 8'b11111101;
             scan_chain[SCAN_MEM0_INDEX + 242*8 +: 8] = 8'b11110000;
-
-
-
 
             //RESET PROCESSOR
             scan_enable_in = 0;
@@ -639,6 +642,10 @@ module qtcore_a1_4baddr_scan_test (
 
             if(scan_chain[SCAN_MEM0_INDEX + 240*8 +: 8] !== io_in) begin
                 $display("MEM[240] wrong value");
+                $finish;
+            end
+            if(scan_chain[SCAN_MEM0_INDEX + 254*8 +: 8] !== 8'b11111101) begin
+                $display("MEM[254] wrong value (%b)", scan_chain[SCAN_MEM0_INDEX + 254*8 +: 8]);
                 $finish;
             end
             if(scan_chain[SCAN_MEM0_INDEX + 255*8 +: 8] !== 8'hf1) begin
