@@ -38,6 +38,7 @@ module qtcore_a1_4baddr_scan_test (
     localparam DO_TEST_2 = 1;
     localparam DO_TEST_3 = 1;
     localparam DO_TEST_4 = 1;
+    localparam DO_TEST_IRQ = 1;
 
     reg [7:0] io_in;
     wire [7:0] io_out;
@@ -607,8 +608,17 @@ module qtcore_a1_4baddr_scan_test (
             scan_chain[SCAN_MEM0_INDEX + 10*8 +: 8] = 8'b11111101;
             scan_chain[SCAN_MEM0_INDEX + 11*8 +: 8] = 8'b11111010;
             scan_chain[SCAN_MEM0_INDEX + 12*8 +: 8] = 8'b00011110;
-            scan_chain[SCAN_MEM0_INDEX + 13*8 +: 8] = 8'b10010011;
-            scan_chain[SCAN_MEM0_INDEX + 14*8 +: 8] = 8'b11110000;
+            scan_chain[SCAN_MEM0_INDEX + 13*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 14*8 +: 8] = 8'b10111100;
+            scan_chain[SCAN_MEM0_INDEX + 15*8 +: 8] = 8'b10111101;
+            scan_chain[SCAN_MEM0_INDEX + 16*8 +: 8] = 8'b10000010;
+            scan_chain[SCAN_MEM0_INDEX + 17*8 +: 8] = 8'b10111110;
+            scan_chain[SCAN_MEM0_INDEX + 18*8 +: 8] = 8'b10000000;
+            scan_chain[SCAN_MEM0_INDEX + 19*8 +: 8] = 8'b10110100;
+            scan_chain[SCAN_MEM0_INDEX + 20*8 +: 8] = 8'b10110100;
+            scan_chain[SCAN_MEM0_INDEX + 21*8 +: 8] = 8'b00011101;
+            scan_chain[SCAN_MEM0_INDEX + 22*8 +: 8] = 8'b10010011;
+            scan_chain[SCAN_MEM0_INDEX + 23*8 +: 8] = 8'b11110000;
             scan_chain[SCAN_MEM0_INDEX + 48*8 +: 8] = 8'b11111101;
             scan_chain[SCAN_MEM0_INDEX + 49*8 +: 8] = 8'b10011111;
             scan_chain[SCAN_MEM0_INDEX + 50*8 +: 8] = 8'b10000001;
@@ -617,6 +627,8 @@ module qtcore_a1_4baddr_scan_test (
             scan_chain[SCAN_MEM0_INDEX + 240*8 +: 8] = 8'b00001111;
             scan_chain[SCAN_MEM0_INDEX + 241*8 +: 8] = 8'b11111101;
             scan_chain[SCAN_MEM0_INDEX + 242*8 +: 8] = 8'b11110000;
+
+
 
             //RESET PROCESSOR
             scan_enable_in = 0;
@@ -644,6 +656,10 @@ module qtcore_a1_4baddr_scan_test (
                 $display("MEM[240] wrong value");
                 $finish;
             end
+            if(scan_chain[SCAN_MEM0_INDEX + 253*8 +: 8] !== 8'h2) begin
+                $display("MEM[253] wrong value (%b)", scan_chain[SCAN_MEM0_INDEX + 253*8 +: 8]);
+                $finish;
+            end
             if(scan_chain[SCAN_MEM0_INDEX + 254*8 +: 8] !== 8'b11111101) begin
                 $display("MEM[254] wrong value (%b)", scan_chain[SCAN_MEM0_INDEX + 254*8 +: 8]);
                 $finish;
@@ -655,245 +671,61 @@ module qtcore_a1_4baddr_scan_test (
             $display("IO_OUT correct and memory values correct after scanout");
         end
 
-        /*$display("TEST 4");
+        if(DO_TEST_IRQ) begin
+            $display("TEST IRQ - test_irq.asm (Emits INT_OUT)");
+            io_in = 8'h12;
 
-        scan_chain[2:0] = 3'b001;  //state = fetch
-        scan_chain[7:3] = 5'h0;    //PC = 0
-        scan_chain[15:8] = 8'h00; //IR = 0
-        scan_chain[23:16] = 8'h00; //ACC = 0x00
-        scan_chain[31 -: 8] = 8'b00010000;
-        scan_chain[39 -: 8] = 8'b11110110;
-        scan_chain[47 -: 8] = 8'b00100000;
-        scan_chain[55 -: 8] = 8'b11110111;
-        scan_chain[63 -: 8] = 8'b00100001;
-        scan_chain[71 -: 8] = 8'b11111000;
-        scan_chain[79 -: 8] = 8'b00100010;
-        scan_chain[87 -: 8] = 8'b11111001;
-        scan_chain[95 -: 8] = 8'b00100011;
-        scan_chain[103 -: 8] = 8'b11111010;
-        scan_chain[111 -: 8] = 8'b00100100;
-        scan_chain[119 -: 8] = 8'b11111100;
-        scan_chain[127 -: 8] = 8'b00100101;
-        scan_chain[135 -: 8] = 8'b11111101;
-        scan_chain[143 -: 8] = 8'b11111110;
-        scan_chain[151 -: 8] = 8'b00100110;
-        scan_chain[159 -: 8] = 8'b00001010;
-        scan_chain[199 -: 16] = 16'hd5ce;
+            scan_chain = 'b0;
+            scan_chain[SCAN_CU_INDEX +: 3] = 3'b001; //state = fetch
+            scan_chain[SCAN_SEG_INDEX +: 4] = 4'b0000; //SEG = 0
+            scan_chain[SCAN_PC_INDEX +: 8] = 8'h00;    //PC = 00
+            scan_chain[SCAN_IR_INDEX +: 8] = 8'h00; //IR = 0x00
+            scan_chain[SCAN_ACC_INDEX +: 8] = 8'h00; //ACC = 0x00
+            scan_chain[SCAN_CSR_SEGEXE_L_INDEX +: 8] = 8'hFF; //SEGEXE_L = 0xFF
+            scan_chain[SCAN_CSR_SEGEXE_H_INDEX +: 8] = 8'h00; //SEGEXE_H = 0x00
+            scan_chain[SCAN_CSR_IO_IN_INDEX +: 8] = 8'h00; //IO_IN = 0x00
+            scan_chain[SCAN_CSR_IO_OUT_INDEX +: 8] = 8'h00; //IO_OUT = 0x00
+            scan_chain[SCAN_CSR_CNT_L_INDEX +: 8] = 8'h00; //CNT_L = 0x00
+            scan_chain[SCAN_CSR_CNT_H_INDEX +: 8] = 8'h00; //CNT_H = 0x00
+            scan_chain[SCAN_CSR_STATUS_CTRL_INDEX +: 8] = 8'h00; //STATUS_CTRL = 0x00
+            scan_chain[SCAN_CSR_TEMP_INDEX +: 8] = 8'h00; //TEMP = 0x00
 
-        //RESET PROCESSOR
-        scan_enable_in = 0;
-        proc_en_in = 0;
-        scan_in = 0;
-        reset_processor;
-        //SCAN
-        xchg_scan_chain;
-        //RUN PROCESSOR UNTIL HALT
-        run_processor_until_halt(256, i);
-        if(scan_out != 1) begin
-            $display("Program failed to halt");
-            $finish;
-        end
-        $display("Program halted after %d clock cycles", i);
-        //SCAN OUT
-        xchg_scan_chain;
+            scan_chain[SCAN_MEM0_INDEX + 0*8 +: 8] = 8'b11111101;
+            scan_chain[SCAN_MEM0_INDEX + 1*8 +: 8] = 8'b10000001;
+            scan_chain[SCAN_MEM0_INDEX + 2*8 +: 8] = 8'b10111110;
+            scan_chain[SCAN_MEM0_INDEX + 3*8 +: 8] = 8'b11111111;
 
-        if(scan_chain[31+8*0 -: 8] !== 20) begin
-            $display("MEM[0] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*1 -: 8] !== 10) begin
-            $display("MEM[1] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*2 -: 8] !== 160) begin
-            $display("MEM[2] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*3 -: 8] !== 65) begin
-            $display("MEM[3] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*4 -: 8] !== 160) begin
-            $display("MEM[4] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*5 -: 8] !== 159) begin
-            $display("MEM[5] wrong value");
-            $finish;
-        end
-        if(scan_chain[31+8*6 -: 8] !== 255) begin
-            $display("MEM[5] wrong value");
-            $finish;
-        end
-        $display("Memory values correct after scanout");
-
-        $display("TEST 5: BTN/LED");
-
-        scan_chain[2:0] = 3'b001;  //state = fetch
-        scan_chain[7:3] = 5'h0;    //PC = 0
-        scan_chain[15:8] = 8'h00; //IR = 0
-        scan_chain[23:16] = 8'h00; //ACC = 0x00
-        scan_chain[31 -: 8] = 8'b00010011;
-        scan_chain[39 -: 8] = 8'b10010000;
-        scan_chain[47 -: 8] = 8'b11110101;
-        scan_chain[55 -: 8] = 8'b00010011;
-        scan_chain[63 -: 8] = 8'b10010000;
-        scan_chain[71 -: 8] = 8'b11110011;
-        scan_chain[79 -: 8] = 8'b00001110;
-        scan_chain[87 -: 8] = 8'b11010000;
-        scan_chain[95 -: 8] = 8'b00101110;
-        scan_chain[103 -: 8] = 8'b11101110;
-        scan_chain[111 -: 8] = 8'b11111011;
-        scan_chain[119 -: 8] = 8'b00110011;
-        scan_chain[127 -: 8] = 8'b11111101;
-        scan_chain[135 -: 8] = 8'b11110000;
-        scan_chain[143 -: 8] = 8'b00000000;
-        scan_chain[151 -: 8] = 8'b00011000;
-        scan_chain[159 -: 8] = 8'b00000001;
-        scan_chain[167 -: 8] = 8'b00000000;
-        scan_chain[175 -: 8] = 8'b00000000;
-        scan_chain[199 -: 16] = 16'hd5ce;
-
-
-        //RESET PROCESSOR
-        scan_enable_in = 0;
-        proc_en_in = 0;
-        scan_in = 0;
-        reset_processor;
-        //SCAN
-        xchg_scan_chain;
-        //RUN PROCESSOR FOR 32 cycles at a time (should not halt)
-        btn_in = 0;
-        run_processor_until_halt(32, i);
-        btn_in = 1;
-        run_processor_until_halt(32, i);
-        
-        if(led_out != 7'h0c) begin
-            $display("LEDs wrong value");
-            $finish;
+            //RESET PROCESSOR
+            scan_enable_in = 0;
+            proc_en_in = 0;
+            scan_in = 0;
+            reset_processor;
+            //SCAN
+            xchg_scan_chain;
+            if(int_out !== 0) begin
+                $display("INT_out wrong value (%b)", int_out);
+                $finish;
+            end
+            //RUN PROCESSOR UNTIL HALT
+            run_processor_until_halt(12, i);
+            if(halt_out != 1) begin
+                $display("Program failed to halt");
+                $finish;
+            end
+            $display("Program halted after %d clock cycles", i);
+            //CHECK INT_OUT BEFORE SCAN_OUT (it will mess it up)
+            if(int_out !== 1) begin
+                $display("INT_out wrong value (%b)", int_out);
+                $finish;
+            end
+            $display("INT_out correct");
+            //no need to SCAN OUT for this test
+            
         end
 
-        btn_in = 0;
-        run_processor_until_halt(32, i);
-        btn_in = 1;
-        run_processor_until_halt(32, i);
-        
-        if(led_out != 7'h00) begin
-            $display("LEDs wrong value");
-            $finish;
-        end
-
-        btn_in = 0;
-        run_processor_until_halt(32, i);
-        btn_in = 1;
-        run_processor_until_halt(32, i);
-        
-        if(led_out != 7'h0c) begin
-            $display("LEDs wrong value");
-            $finish;
-        end
-
-        btn_in = 0;
-        run_processor_until_halt(32, i);
-        btn_in = 0;
-        run_processor_until_halt(32, i);
-        
-        if(led_out != 7'h0c) begin
-            $display("LEDs wrong value (should not have changed, btn=1 missing)");
-            $finish;
-        end
-        
-        $display("BTN/LED values correct");
-
-        $display("TEST 6: 7SEG");
-        scan_chain[2:0] = 3'b001;  //state = fetch
-        scan_chain[7:3] = 5'h0;    //PC = 0
-        scan_chain[15:8] = 8'h00; //IR = 0
-        scan_chain[23:16] = 8'h00; //ACC = 0x00
-        scan_chain[31 -: 8] = 8'b00010000;
-        scan_chain[39 -: 8] = 8'b01010100;
-        scan_chain[47 -: 8] = 8'b11111011;
-        scan_chain[55 -: 8] = 8'b00110011;
-        scan_chain[63 -: 8] = 8'b00010000;
-        scan_chain[71 -: 8] = 8'b11100001;
-        scan_chain[79 -: 8] = 8'b00110000;
-        scan_chain[87 -: 8] = 8'b11111101;
-        scan_chain[95 -: 8] = 8'b11110000;
-        scan_chain[103 -: 8] = 8'b00000000;
-        scan_chain[111 -: 8] = 8'b00000000;
-        scan_chain[119 -: 8] = 8'b00000000;
-        scan_chain[127 -: 8] = 8'b00000000;
-        scan_chain[135 -: 8] = 8'b00000000;
-        scan_chain[143 -: 8] = 8'b00000000;
-        scan_chain[151 -: 8] = 8'b00000000;
-        scan_chain[159 -: 8] = 8'b00000000;
-        scan_chain[167 -: 8] = 8'b00000000;
-        scan_chain[175 -: 8] = 8'b00000000;
-        scan_chain[199 -: 16] = 16'hd5ce;
-
-
-        //RESET PROCESSOR
-        scan_enable_in = 0;
-        proc_en_in = 0;
-        scan_in = 0;
-        reset_processor;
-        //SCAN
-        xchg_scan_chain;
-        //RUN PROCESSOR FOR 16 cycles at a time (should not halt)
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b0111111) begin //first output value: "0"
-            $display("LEDs wrong value 0: %b", led_out);
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b0000110) begin //first output value: "1"
-            $display("LEDs wrong value 1");
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b1011011) begin //first output value: "2"
-            $display("LEDs wrong value 2");
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b1001111) begin //first output value: "3"
-            $display("LEDs wrong value 3 %b", led_out);
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b1100110) begin //first output value: "4"
-            $display("LEDs wrong value 4");
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b1101101) begin //first output value: "5"
-            $display("LEDs wrong value 5");
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b1111100) begin //first output value: "6"
-            $display("LEDs wrong value");
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b0000111) begin //first output value: "7"
-            $display("LEDs wrong value");
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b1111111) begin //first output value: "8"
-            $display("LEDs wrong value");
-            $finish;
-        end
-        run_processor_until_halt(18, i);
-        if(led_out != 7'b1100111) begin //first output value: "9"
-            $display("LEDs wrong value");
-            $finish;
-        end
-
-        $display("All segment counting correct");
         
         
+        /*
         fid = $fopen("TEST_PASSES.txt", "w");
         $fwrite(fid, "TEST_PASSES");
         $fclose(fid); //*/

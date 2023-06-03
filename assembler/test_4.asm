@@ -3,6 +3,7 @@
 ; check output: program halted
 ; check output: IO_OUT = 15
 ; check output: M[240] = IO_IN
+; check output: M[253] = 2
 ; check output: M[254] = 0b11111101
 ; check output: M[255] = 0xf1
 0: CLR
@@ -18,8 +19,17 @@
 10: CLR ;
 11: LDAR ; loads the value of M[0] = 0b11111101 into ACC
 12: STA 14; stores it in M[16*15 + 14 = 254]
-13: LUI 3;
-14: JMP ; jumps to address 48
+13: CLR ;
+14: CSW 4; set 0 to CNT_L
+15: CSW 5; set 0 to CNT_H
+16: ADDI 2; 
+17: CSW 6; set the second bit of STATUS_CTRL (starts the counter)
+18: ADDI 0; timer to value 1
+19: CSR 4; reads the timer (value = 1), timer to value 2
+20: CSR 4; reads the timer (value = 2), timer to value 3  
+21: STA 13; stores it in M[16*15 + 13 = 253] (should be value 2)
+22: LUI 3;
+23: JMP ; jumps to address 48
 
 48: CLR ;
 49: LUI 15;
